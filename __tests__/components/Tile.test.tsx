@@ -81,4 +81,79 @@ describe('Tileコンポーネント', () => {
     rerender(<Tile number={15} position={{ row: 3, col: 2 }} isMovable={false} onClick={() => {}} />);
     expect(screen.getByText('15')).toBeInTheDocument();
   });
+
+  describe('画像モード', () => {
+    const mockImageData: ImageData = {
+      data: new Uint8ClampedArray([255, 0, 0, 255]),
+      width: 100,
+      height: 100,
+      colorSpace: 'srgb',
+    };
+
+    it('画像データが提供された場合、canvasが表示されること', () => {
+      const { container } = render(
+        <Tile
+          number={1}
+          position={{ row: 0, col: 0 }}
+          isMovable={false}
+          onClick={() => {}}
+          imageData={mockImageData}
+        />
+      );
+
+      const canvas = container.querySelector('canvas');
+      expect(canvas).toBeInTheDocument();
+    });
+
+    it('画像モードでも空きマスは空のままであること', () => {
+      const { container } = render(
+        <Tile
+          number={0}
+          position={{ row: 2, col: 2 }}
+          isMovable={false}
+          onClick={() => {}}
+          imageData={null}
+        />
+      );
+
+      expect(container.querySelector('.empty-tile')).toBeInTheDocument();
+      expect(container.querySelector('canvas')).not.toBeInTheDocument();
+    });
+
+    it('画像データがnullの場合は数字モードで表示されること', () => {
+      render(
+        <Tile
+          number={5}
+          position={{ row: 1, col: 1 }}
+          isMovable={false}
+          onClick={() => {}}
+          imageData={null}
+        />
+      );
+
+      expect(screen.getByText('5')).toBeInTheDocument();
+    });
+
+    it('画像モードでもクリックイベントが動作すること', async () => {
+      const handleClick = jest.fn();
+      const user = userEvent.setup();
+
+      const { container } = render(
+        <Tile
+          number={3}
+          position={{ row: 0, col: 1 }}
+          isMovable={true}
+          onClick={handleClick}
+          imageData={mockImageData}
+        />
+      );
+
+      const tile = container.querySelector('canvas')?.closest('div');
+      if (tile) {
+        await user.click(tile);
+      }
+
+      expect(handleClick).toHaveBeenCalledTimes(1);
+    });
+  });
 });

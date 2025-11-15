@@ -5,7 +5,7 @@
  * パズルの個別タイルを表示
  */
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Position } from '@/lib/puzzle/types';
 
@@ -14,9 +14,25 @@ interface TileProps {
   position: Position;
   isMovable: boolean;
   onClick: () => void;
+  imageData?: ImageData | null;
 }
 
-export function Tile({ number, position, isMovable, onClick }: TileProps) {
+export function Tile({ number, position, isMovable, onClick, imageData }: TileProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // 画像データをcanvasに描画
+  useEffect(() => {
+    if (imageData && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        canvas.width = imageData.width;
+        canvas.height = imageData.height;
+        ctx.putImageData(imageData, 0, 0);
+      }
+    }
+  }, [imageData]);
+
   // 空きマスの場合
   if (number === 0) {
     return (
@@ -47,7 +63,11 @@ export function Tile({ number, position, isMovable, onClick }: TileProps) {
       `}
       data-testid={`tile-${position.row}-${position.col}`}
     >
-      <span className="text-3xl font-bold text-blue-900">{number}</span>
+      {imageData ? (
+        <canvas ref={canvasRef} className="w-full h-full object-cover rounded-md" />
+      ) : (
+        <span className="text-3xl font-bold text-blue-900">{number}</span>
+      )}
     </motion.div>
   );
 }
