@@ -1,478 +1,422 @@
-# シンプルパズル - 実装計画書（TDD準拠版）
+# カスタム画像パズル - 実装計画書（TDD準拠版）
 
 ## 実装方針
-- **TDDサイクル**: 全Phaseで Red → Green → Refactor を厳守
-- **テストファースト**: 実装前に必ずテストを書く
-- **段階的実装**: Phase単位で完結させ、都度コミット
-- **完了条件**: 全テストパス + コードカバレッジ80%以上
 
----
-
-## Phase 0: プロジェクトセットアップ・テスト環境構築（予定工数: 2時間）
-
-### 目的
-開発環境とテスト基盤を整備し、TDD開発の土台を構築する。
-
-### タスク
-
-- [ ] **Next.js プロジェクト作成（Red）**
-  - `npx create-next-app@14 . --typescript --tailwind --app --no-src-dir`
-  - 初期設定確認テスト作成（ビルド成功確認）
-
-- [ ] **テストライブラリセットアップ（Green）**
-  - Jest + React Testing Library インストール
-  - `jest.config.js` 設定
-  - `setupTests.ts` 作成
-  - 動作確認用ダミーテスト実装
-
-- [ ] **E2Eテスト環境構築（Refactor）**
-  - Playwright インストール・設定
-  - `playwright.config.ts` 作成
-  - サンプルE2Eテスト作成
-
-- [ ] **追加ライブラリインストール**
-  - Framer Motion（アニメーション）
-  - Zustand（状態管理）
-  - Dexie.js（IndexedDB）
-
-- [ ] **PWA基盤セットアップ**
-  - `next-pwa` インストール
-  - `next.config.js` PWA設定
-  - `manifest.json` 作成
-
-- [ ] **環境変数設定**
-  - `.env.local.example` 作成
-  - API キー管理構造確認
-
-### 完了条件
-- ✅ `npm run dev` でサーバー起動
-- ✅ `npm test` でテスト実行可能
-- ✅ `npm run test:e2e` でE2Eテスト実行可能
-
----
-
-## Phase 1: パズル生成・表示・基本移動機能（予定工数: 8時間）
-
-### 目的
-パズルの生成、表示、タイル移動の基本機能を実装する。
-
-### タスク
-
-- [ ] **パズル生成ロジックテスト作成（Red）**
-  - `lib/puzzle/generator.ts` のテスト作成
-  - 正しいサイズのパズル生成テスト
-  - 解ける配置であることの検証テスト
-
-- [ ] **パズル生成ロジック実装（Green）**
-  - `lib/puzzle/generator.ts` 実装
-  - `generatePuzzle()` 関数実装
-  - シャッフルアルゴリズム実装
-  - テストが全てパスすることを確認
-
-- [ ] **移動可否判定ロジックテスト作成（Red）**
-  - `lib/puzzle/validator.ts` のテスト作成
-  - 移動可能なタイルの判定テスト
-  - 無効な移動の検出テスト
-
-- [ ] **移動可否判定ロジック実装（Green）**
-  - `lib/puzzle/validator.ts` 実装
-  - `isMovable()` 関数実装
-  - `getValidMoves()` 関数実装
-
-- [ ] **Tileコンポーネントテスト作成（Red）**
-  - `components/Tile.test.tsx` 作成
-  - タイル表示テスト
-  - クリックイベントテスト
-
-- [ ] **Tileコンポーネント実装（Green）**
-  - `components/Tile.tsx` 実装
-  - Framer Motion でアニメーション
-  - Tailwind CSS スタイリング
-
-- [ ] **PuzzleBoardコンポーネント実装（Red → Green → Refactor）**
-  - `components/PuzzleBoard.tsx` テスト・実装
-  - タイル配置・表示
-  - タイル移動ハンドリング
-  - グリッドレイアウト
-
-- [ ] **リファクタリング（Refactor）**
-  - コンポーネント分割
-  - パフォーマンス最適化（useMemo）
-  - コード整理・命名改善
-
-### 完了条件
-- ✅ パズルが正しく生成される
-- ✅ タイルをクリックして移動できる
-- ✅ スムーズなアニメーション
-- ✅ 全テストパス
-
----
-
-## Phase 2: A*ソルバー実装（予定工数: 10時間）
-
-### 目的
-最適解を計算するA*アルゴリズムを実装する。
-
-### タスク
-
-- [ ] **Manhattan距離計算テスト作成（Red）**
-  - `lib/puzzle/solver.ts` のテスト作成
-  - Manhattan距離の正確性テスト
-  - エッジケーステスト
-
-- [ ] **Manhattan距離計算実装（Green）**
-  - `calculateManhattanDistance()` 関数実装
-  - テスト全パス確認
-
-- [ ] **A*ソルバーテスト作成（Red）**
-  - 簡単なパズル（3×3）の最適解テスト
-  - 解なしパズルの検出テスト
-  - パフォーマンステスト（9×9で5秒以内）
-
-- [ ] **A*ソルバー実装（Green）**
-  - `solvePuzzle()` 関数実装
-  - 優先度キュー実装
-  - ゴール状態判定実装
-  - 経路再構築実装
-
-- [ ] **最適化（Refactor）**
-  - IDA*アルゴリズムへの切り替え（大きなパズル用）
-  - メモリ使用量削減
-  - 計算速度向上
-
-- [ ] **OptimalSolutionViewerコンポーネント実装（Red → Green → Refactor）**
-  - `components/OptimalSolutionViewer.tsx` テスト・実装
-  - 最適解の手順表示
-  - ステップバイステップ再生機能
-
-### 完了条件
-- ✅ A*ソルバーが正しく最適解を計算
-- ✅ 9×9パズルで5秒以内に計算完了
-- ✅ 最適解が視覚的に表示される
-- ✅ 全テストパス
-
----
-
-## Phase 3: タイマー・手数カウント機能（予定工数: 4時間）
-
-### 目的
-ゲームモード（タイムアタック、手数最小チャレンジ、フリープレイ）の基盤を実装する。
-
-### タスク
-
-- [ ] **Timerコンポーネントテスト作成（Red）**
-  - `components/Timer.test.tsx` 作成
-  - カウントアップ・カウントダウンテスト
-  - 終了イベント発火テスト
-
-- [ ] **Timerコンポーネント実装（Green）**
-  - `components/Timer.tsx` 実装
-  - モード別タイマー（タイムアタック/フリープレイ）
-  - MM:SS 形式表示
-
-- [ ] **MoveCounterコンポーネント実装（Red → Green → Refactor）**
-  - `components/MoveCounter.tsx` テスト・実装
-  - 手数カウント
-  - ヒントペナルティ反映
-
-- [ ] **GameStatsコンポーネント実装（Red → Green → Refactor）**
-  - `components/GameStats.tsx` テスト・実装
-  - 統計バー表示
-  - リアルタイム更新
-
-- [ ] **ゲームモード選択機能**
-  - `components/ModeSelector.tsx` 実装
-  - タイムアタック、手数最小、フリープレイ切り替え
-
-### 完了条件
-- ✅ タイマーが正確に動作
-- ✅ 手数が正しくカウントされる
-- ✅ モード切り替えが機能する
-- ✅ 全テストパス
-
----
-
-## Phase 4: AIヒント生成機能（予定工数: 5時間）
-
-### 目的
-AI による解法ヒント生成機能を実装する。
-
-### タスク
-
-- [ ] **ヒント生成ロジックテスト作成（Red）**
-  - `lib/ai/generateHint.test.ts` 作成
-  - モックAPIレスポンステスト
-  - エラーハンドリングテスト
-
-- [ ] **Server Action実装（Green）**
-  - `app/actions/ai.ts` 作成
-  - `generateHint()` 実装
-  - A*ソルバーと連携して次の一手を取得
-  - エラーハンドリング実装
-
-- [ ] **HintButtonコンポーネント実装（Red → Green → Refactor）**
-  - `components/HintButton.tsx` テスト・実装
-  - ヒント表示UI
-  - 使用制限（3回まで）
-  - ペナルティ表示
-
-- [ ] **統合テスト（E2E）**
-  - Playwright E2Eテスト作成
-  - ヒント使用フロー確認
-
-- [ ] **リファクタリング（Refactor）**
-  - ローディングUI改善
-  - エラーハンドリング強化
-
-### 完了条件
-- ✅ AI ヒントが正確に生成される
-- ✅ ヒント使用制限が機能する
-- ✅ エラー時のフォールバック動作
-- ✅ E2Eテストパス
-
----
-
-## Phase 5: AI分析・アドバイス機能（予定工数: 5時間）
-
-### 目的
-プレイ後の AI 分析・アドバイス機能を実装する。
-
-### タスク
-
-- [ ] **プレイスタイル分析ロジックテスト作成（Red）**
-  - `lib/ai/analyzePlay.test.ts` 作成
-  - 効率性計算テスト
-  - 移動パターン分析テスト
-
-- [ ] **プレイスタイル分析ロジック実装（Green）**
-  - `lib/ai/analyzePlay.ts` 実装
-  - 効率性スコア計算
-  - 移動パターン抽出
-
-- [ ] **AI分析Server Action実装（Red → Green）**
-  - `analyzePlayStyle()` テスト・実装
-  - プロンプト設計
-  - レスポンスパース処理
-
-- [ ] **AnalysisReportコンポーネント実装（Red → Green → Refactor）**
-  - `components/AnalysisReport.tsx` テスト・実装
-  - AIアドバイス表示
-  - 統計サマリー表示
-
-- [ ] **結果画面実装（E2E）**
-  - `app/results/page.tsx` 実装
-  - E2Eテスト作成（プレイ完了 → 結果表示フロー）
-
-### 完了条件
-- ✅ プレイスタイルが正確に分析される
-- ✅ AI が適切なアドバイスを生成
-- ✅ 結果画面が見やすく表示
-- ✅ 全テストパス
-
----
-
-## Phase 6: 画像モード機能（予定工数: 6時間）
-
-### 目的
-数字ではなく画像を使ったパズルモードを実装する。
-
-### タスク
-
-- [ ] **画像分割ロジックテスト作成（Red）**
-  - `lib/puzzle/imageProcessor.ts` のテスト作成
-  - 画像を正しくグリッド分割できるかテスト
-
-- [ ] **画像分割ロジック実装（Green）**
-  - `lib/puzzle/imageProcessor.ts` 実装
-  - Canvas API で画像をグリッド分割
-  - 各タイルに画像片を割り当て
-
-- [ ] **画像アップロード機能実装（Red → Green → Refactor）**
-  - `components/ImageUploader.tsx` テスト・実装
-  - ファイル選択UI
-  - プレビュー表示
-  - 画像検証（サイズ、形式）
-
-- [ ] **プリセット画像機能**
-  - `/public/images/presets/` にサンプル画像配置
-  - プリセット選択UI実装
-
-- [ ] **画像モードタイル表示**
-  - `Tile.tsx` を拡張
-  - 数字/画像の切り替え表示
-
-### 完了条件
-- ✅ 画像が正しく分割される
-- ✅ 画像アップロードが機能する
-- ✅ 画像パズルがプレイ可能
-- ✅ 全テストパス
-
----
-
-## Phase 7: PWA対応（予定工数: 3時間）
-
-### 目的
-完全なオフライン動作とインストール機能を実装する。
-
-### タスク
-
-- [ ] **Service Worker動作テスト作成（Red）**
-  - Service Worker登録テスト
-  - キャッシュ戦略テスト
-  - オフライン動作テスト
-
-- [ ] **Service Worker設定（Green）**
-  - `next-pwa` 詳細設定
-  - キャッシュルール定義
-  - オフライン検出ロジック
-
-- [ ] **IndexedDB統合（Red → Green → Refactor）**
-  - `lib/db/schema.ts` 実装
-  - Dexie.js セットアップ
-  - CRUD操作実装
-  - テスト作成・実装
-
-- [ ] **インストールプロンプト実装**
-  - PWAインストールボタン
-  - インストール状態検出
-
-- [ ] **E2Eテスト（Offline）**
-  - Playwright オフラインモードテスト
-  - キャッシュからの読み込み確認
-
-### 完了条件
-- ✅ オフラインで完全動作
-- ✅ インストール可能
-- ✅ Lighthouse PWA スコア 100点
-- ✅ 全テストパス
-
----
-
-## Phase 8: 履歴・グラフ機能（予定工数: 4時間）
-
-### 目的
-過去のプレイ履歴と上達グラフを表示する。
-
-### タスク
-
-- [ ] **履歴取得ロジックテスト作成（Red）**
-  - IndexedDB クエリテスト
-  - ソート・フィルタリングテスト
-
-- [ ] **履歴取得ロジック実装（Green）**
-  - `lib/db/operations.ts` 拡張
-  - 履歴取得関数実装
-  - ページネーション実装
-
-- [ ] **ProgressChartコンポーネント実装（Red → Green → Refactor）**
-  - `components/ProgressChart.tsx` テスト・実装
-  - Recharts でグラフ描画
-  - 手数推移グラフ
-  - クリアタイム推移グラフ
-
-- [ ] **履歴画面実装**
-  - `app/history/page.tsx` 実装
-  - 履歴一覧表示
-  - グラフ表示
-  - E2Eテスト
-
-### 完了条件
-- ✅ 履歴が正確に保存・取得される
-- ✅ グラフが見やすく表示
-- ✅ 上達傾向が可視化される
-- ✅ 全テストパス
-
----
-
-## Phase 9: 最終調整・パフォーマンス最適化（予定工数: 3時間）
-
-### タスク
-
-- [ ] **パフォーマンス計測**
-  - Lighthouse テスト実行
-  - Core Web Vitals 確認
-
-- [ ] **最適化実施**
-  - 画像最適化
-  - コード分割
-  - バンドルサイズ削減
-  - A*アルゴリズム最適化
-
-- [ ] **アクセシビリティ改善**
-  - ARIA属性追加
-  - キーボードナビゲーション改善
-  - スクリーンリーダー対応
-
-- [ ] **最終E2Eテスト**
-  - 全機能フローテスト
-  - クロスブラウザテスト
-
-- [ ] **ドキュメント整備**
-  - README.md 作成
-  - 環境構築手順
-  - 使用方法
-
-### 完了条件
-- ✅ Lighthouse スコア全項目90点以上
-- ✅ 全E2Eテストパス
+### TDD（Test-Driven Development）サイクル
+各Phaseで以下のサイクルを繰り返します：
+1. **Red（失敗）**: テストを書く → 失敗を確認
+2. **Green（成功）**: 最小限の実装でテストを通す
+3. **Refactor（改善）**: テストが通った状態でリファクタリング
+
+### 完了条件（各Phase共通）
+- ✅ 全テストがパス
 - ✅ コードカバレッジ80%以上
+- ✅ ESLint警告ゼロ
+- ✅ 動作確認完了
 
 ---
 
-## 全体スケジュール
+## Phase 0: テスト環境構築（予定工数: 2時間）
 
-| Phase | 内容 | 工数 | 累計 |
-|-------|------|------|------|
-| Phase 0 | セットアップ・テスト環境 | 2h | 2h |
-| Phase 1 | パズル生成・表示・移動 | 8h | 10h |
-| Phase 2 | A*ソルバー | 10h | 20h |
-| Phase 3 | タイマー・手数カウント | 4h | 24h |
-| Phase 4 | AIヒント生成 | 5h | 29h |
-| Phase 5 | AI分析・アドバイス | 5h | 34h |
-| Phase 6 | 画像モード | 6h | 40h |
-| Phase 7 | PWA対応 | 3h | 43h |
-| Phase 8 | 履歴・グラフ | 4h | 47h |
-| Phase 9 | 最終調整 | 3h | **50h** |
+### タスク
+- [ ] Jestセットアップ（Red）
+  - jest.config.js作成
+  - テスト実行確認（失敗することを確認）
+- [ ] 設定ファイル作成（Green）
+  - jest.setup.ts作成
+  - Testing Library設定
+- [ ] サンプルテスト作成（Refactor）
+  - 簡単なユニットテスト作成
+  - テスト実行確認（成功）
 
-**総工数**: 約50時間（6.25日）
-
----
-
-## Git コミット規律
-
-### コミットタイミング
-- 各Phase完了時
-- Red → Green → Refactor の各サイクル完了時
-- 全テストパス確認後
-
-### コミットメッセージ例
-```
-feat(phase1): implement puzzle generator (Green)
-
-- Add generatePuzzle() function
-- Add shuffle algorithm
-- All tests passing (coverage: 88%)
-```
+### 完了条件
+- ✅ `npm test`でテスト実行可能
+- ✅ サンプルテストがパス
 
 ---
 
-## 最終完了条件チェックリスト
+## Phase 1: 画像処理基盤（予定工数: 8時間）
 
-- [ ] 全機能が要件定義書を満たす
-- [ ] 全単体テストパス（コードカバレッジ80%以上）
-- [ ] 全E2Eテストパス
-- [ ] PWA として完全動作（オフライン含む）
-- [ ] Lighthouse スコア 90点以上（全項目）
-- [ ] A*ソルバーが5秒以内に最適解計算
-- [ ] AI ヒント・分析が正常動作
-- [ ] 画像モードが正常動作
-- [ ] README.md 完備
-- [ ] `.env.local.example` 提供
+### タスク
+
+#### 1.1 画像アップロード処理
+- [ ] テスト作成（Red）：`lib/image/uploader.test.ts`
+  - ファイル読み込みテスト
+  - 正方形トリミングテスト
+  - Base64変換テスト
+- [ ] 実装（Green）：`lib/image/uploader.ts`
+  - FileReader API使用
+  - Canvas APIで正方形トリミング
+  - Base64変換
+- [ ] リファクタリング（Refactor）
+  - エラーハンドリング追加
+  - パフォーマンス最適化
+
+#### 1.2 画像分割処理
+- [ ] テスト作成（Red）：`lib/image/processor.test.ts`
+  - 4×4分割テスト
+  - 5×5分割テスト
+  - 6×6分割テスト
+  - 空きマス位置テスト
+- [ ] 実装（Green）：`lib/image/processor.ts`
+  - Canvas APIで画像分割
+  - ImageFragment配列生成
+- [ ] リファクタリング（Refactor）
+  - コード整理
+  - 型安全性向上
+
+#### 1.3 プリセット画像準備
+- [ ] プリセット画像収集・配置
+  - `public/presets/animals/` に3〜5枚
+  - `public/presets/sea/` に3〜5枚
+  - `public/presets/landscapes/` に3〜5枚
+- [ ] 定義ファイル作成：`lib/image/presets.ts`
+  - プリセット画像のメタデータ
+
+### 完了条件
+- ✅ 画像アップロード・分割のテストがパス
+- ✅ プリセット画像が正しく配置
+- ✅ カバレッジ80%以上
+
+---
+
+## Phase 2: パズル基本機能（予定工数: 10時間）
+
+### タスク
+
+#### 2.1 型定義
+- [ ] `lib/puzzle/types.ts`作成
+  - PuzzleState、TileData、Position等の型定義
+
+#### 2.2 パズル生成ロジック
+- [ ] テスト作成（Red）：`lib/puzzle/generator.test.ts`
+  - 完成状態生成テスト
+  - シャッフルテスト（必ず解ける配置になるか）
+  - サイズ別テスト（4×4、5×5、6×6）
+- [ ] 実装（Green）：`lib/puzzle/generator.ts`
+  - createSolvedState実装
+  - generatePuzzle実装
+  - getValidMoves実装
+  - applyMove実装
+- [ ] リファクタリング（Refactor）
+  - シャッフル回数調整
+  - コード最適化
+
+#### 2.3 移動可否判定
+- [ ] テスト作成（Red）：`lib/puzzle/validator.test.ts`
+  - 移動可能判定テスト
+  - 完成判定テスト
+  - 不正な移動のテスト
+- [ ] 実装（Green）：`lib/puzzle/validator.ts`
+  - canMove実装
+  - isComplete実装
+- [ ] リファクタリング（Refactor）
+
+#### 2.4 パズルボードコンポーネント
+- [ ] テスト作成（Red）：`components/PuzzleBoard.test.tsx`
+  - ボード表示テスト
+  - タイルクリックテスト
+- [ ] 実装（Green）：
+  - `components/PuzzleBoard.tsx`
+  - `components/Tile.tsx`
+- [ ] リファクタリング（Refactor）
+  - アクセシビリティ改善
+
+### 完了条件
+- ✅ パズル生成・移動のテストがパス
+- ✅ ボード表示が正常動作
+- ✅ カバレッジ80%以上
+
+---
+
+## Phase 3: A*ソルバー（予定工数: 12時間）
+
+### タスク
+
+#### 3.1 A*アルゴリズム実装
+- [ ] テスト作成（Red）：`lib/puzzle/solver.test.ts`
+  - 簡単な配置の解テスト
+  - Manhattan距離計算テスト
+  - 各サイズ（4×4、5×5、6×6）のテスト
+  - パフォーマンステスト（時間計測）
+- [ ] 実装（Green）：`lib/puzzle/solver.ts`
+  - PriorityQueue実装
+  - calculateManhattanDistance実装
+  - solvePuzzle実装
+  - reconstructPath実装
+- [ ] リファクタリング（Refactor）
+  - パフォーマンス最適化
+  - メモリ効率改善
+
+#### 3.2 最適解表示コンポーネント
+- [ ] テスト作成（Red）：`components/OptimalSolutionViewer.test.tsx`
+- [ ] 実装（Green）：`components/OptimalSolutionViewer.tsx`
+- [ ] リファクタリング（Refactor）
+
+### 完了条件
+- ✅ A*ソルバーのテストがパス
+- ✅ パフォーマンス要件達成：
+  - 4×4: < 1秒
+  - 5×5: < 5秒
+  - 6×6: < 30秒
+- ✅ カバレッジ80%以上
+
+---
+
+## Phase 4: ゲームモード・統計（予定工数: 8時間）
+
+### タスク
+
+#### 4.1 タイマー・手数カウンター
+- [ ] テスト作成（Red）
+  - `components/Timer.test.tsx`
+  - `components/MoveCounter.test.tsx`
+- [ ] 実装（Green）
+  - `components/Timer.tsx`
+  - `components/MoveCounter.tsx`
+  - `components/GameStats.tsx`
+- [ ] リファクタリング（Refactor）
+
+#### 4.2 ゲームモード
+- [ ] テスト作成（Red）：`components/GameModeSelector.test.tsx`
+- [ ] 実装（Green）
+  - `components/GameModeSelector.tsx`
+  - フリープレイ・タイムアタック・手数チャレンジ
+- [ ] リファクタリング（Refactor）
+
+#### 4.3 IndexedDB統合
+- [ ] テスト作成（Red）：`lib/db/operations.test.ts`
+  - ゲーム保存テスト
+  - ゲーム取得テスト
+  - 設定保存テスト
+- [ ] 実装（Green）
+  - `lib/db/schema.ts`（Dexie.js）
+  - `lib/db/operations.ts`
+- [ ] リファクタリング（Refactor）
+
+### 完了条件
+- ✅ タイマー・手数カウントが正常動作
+- ✅ IndexedDB保存・取得が動作
+- ✅ カバレッジ80%以上
+
+---
+
+## Phase 5: AI機能（予定工数: 10時間）
+
+### タスク
+
+#### 5.1 AIヒント生成
+- [ ] テスト作成（Red）
+  - `lib/ai/hintGenerator.test.ts`
+  - `app/actions/ai.test.ts`
+- [ ] 実装（Green）
+  - `lib/ai/hintGenerator.ts`
+  - `app/actions/ai.ts`（generateHint）
+  - `components/HintButton.tsx`
+- [ ] リファクタリング（Refactor）
+  - APIキー未設定時のフォールバック
+  - エラーハンドリング
+
+#### 5.2 プレイスタイル分析
+- [ ] テスト作成（Red）
+  - `lib/ai/analyzePlay.test.ts`
+- [ ] 実装（Green）
+  - `lib/ai/analyzePlay.ts`
+  - `app/actions/ai.ts`（analyzePlayStyle）
+  - `components/AnalysisReport.tsx`
+- [ ] リファクタリング（Refactor）
+
+#### 5.3 APIキー管理
+- [ ] テスト作成（Red）：`lib/utils/apiKeyStorage.test.ts`
+- [ ] 実装（Green）
+  - `lib/utils/apiKeyStorage.ts`
+  - `components/SettingsModal.tsx`
+- [ ] リファクタリング（Refactor）
+
+### 完了条件
+- ✅ AIヒント・分析が動作
+- ✅ APIキー管理が動作
+- ✅ カバレッジ80%以上
+
+---
+
+## Phase 6: AI画像生成（予定工数: 6時間）
+
+### タスク
+
+#### 6.1 Imagen統合
+- [ ] テスト作成（Red）：`app/actions/image.test.ts`
+- [ ] 実装（Green）
+  - `app/actions/image.ts`（generateImage）
+- [ ] リファクタリング（Refactor）
+  - エラーハンドリング
+  - タイムアウト処理
+
+#### 6.2 画像生成UI
+- [ ] テスト作成（Red）：`components/AIImageGenerator.test.tsx`
+- [ ] 実装（Green）
+  - `components/AIImageGenerator.tsx`
+  - プロンプト入力
+  - ローディング表示
+  - プレビュー
+- [ ] リファクタリング（Refactor）
+
+#### 6.3 画像選択統合
+- [ ] テスト作成（Red）：`components/ImageSelector.test.tsx`
+- [ ] 実装（Green）
+  - `components/ImageSelector.tsx`
+  - アップロード・AI生成・プリセット選択
+- [ ] リファクタリング（Refactor）
+
+### 完了条件
+- ✅ AI画像生成が動作
+- ✅ 画像選択UIが完成
+- ✅ カバレッジ80%以上
+
+---
+
+## Phase 7: UI/UX磨き込み（予定工数: 8時間）
+
+### タスク
+
+#### 7.1 アニメーション
+- [ ] Framer Motion導入
+- [ ] タイル移動アニメーション実装
+- [ ] 完成時アニメーション実装
+
+#### 7.2 効果音
+- [ ] テスト作成（Red）：`lib/audio/soundManager.test.ts`
+- [ ] 実装（Green）
+  - `lib/audio/soundManager.ts`
+  - `public/sounds/move.mp3`準備
+  - `public/sounds/complete.mp3`準備
+- [ ] リファクタリング（Refactor）
+
+#### 7.3 ポップなデザイン適用
+- [ ] Tailwind CSSでカラースキーム実装
+  - パステルカラー中心
+  - 明るく楽しい配色
+- [ ] レスポンシブ対応
+- [ ] アクセシビリティ改善
+
+### 完了条件
+- ✅ アニメーションがスムーズ
+- ✅ 効果音が動作
+- ✅ デザインがポップで親しみやすい
+
+---
+
+## Phase 8: PWA完成（予定工数: 6時間）
+
+### タスク
+
+#### 8.1 PWA設定
+- [ ] next.config.jsにnext-pwa追加
+- [ ] manifest.json作成
+- [ ] アイコン作成（192×192、512×512）
+
+#### 8.2 Service Worker
+- [ ] キャッシュ戦略実装
+  - App Shell: Cache First
+  - プリセット画像: Precache
+  - API: Network First
+- [ ] オフライン対応確認
+
+#### 8.3 PWAテスト
+- [ ] Lighthouse監査
+  - PWAスコア確認
+  - パフォーマンススコア90点以上
+  - アクセシビリティスコア90点以上
+- [ ] インストールテスト
+
+### 完了条件
+- ✅ PWAとしてインストール可能
+- ✅ オフライン動作確認
+- ✅ Lighthouse PWAスコア90点以上
+
+---
+
+## Phase 9: 履歴・統計（予定工数: 6時間）
+
+### タスク
+
+#### 9.1 プレイ履歴表示
+- [ ] テスト作成（Red）：`components/HistoryView.test.tsx`
+- [ ] 実装（Green）
+  - `components/HistoryView.tsx`
+  - 履歴一覧表示
+  - ソート機能
+- [ ] リファクタリング（Refactor）
+
+#### 9.2 統計グラフ
+- [ ] 統計データ計算
+- [ ] グラフ表示（recharts使用検討）
+  - クリアタイム推移
+  - 手数推移
+  - 難易度別ベスト
+
+### 完了条件
+- ✅ 履歴表示が動作
+- ✅ 統計グラフが表示
+- ✅ カバレッジ80%以上
+
+---
+
+## 最終チェックリスト
+
+### 機能面
+- [ ] 画像アップロード・AI生成・プリセットの3つの方法で選択可能
+- [ ] 4×4、5×5、6×6のパズルが正しく動作
+- [ ] AIヒント・最適解が正確
+- [ ] オフラインで基本機能が完全動作
+
+### パフォーマンス
+- [ ] タイル移動アニメーション < 300ms
+- [ ] 画像アップロード処理 < 1秒
+- [ ] AI画像生成 < 10秒
+- [ ] AIヒント生成 < 3秒
+- [ ] A*最適解計算:
+  - 4×4: < 1秒
+  - 5×5: < 5秒
+  - 6×6: < 30秒
+- [ ] Lighthouse スコア 90点以上
+
+### ユーザビリティ
+- [ ] 初回訪問から1分以内にプレイ開始可能
+- [ ] 画像選択が直感的
+- [ ] タイル操作が快適
+- [ ] APIキー未設定でも基本機能使用可能
+
+### テスト
+- [ ] 全テストパス
+- [ ] カバレッジ80%以上
+- [ ] E2Eテスト実行・パス
+
+### デプロイ
+- [ ] 本番環境デプロイ
+- [ ] PWA動作確認
+- [ ] Lighthouse監査
+
+---
+
+## 見積もり総工数
+- Phase 0: 2時間
+- Phase 1: 8時間
+- Phase 2: 10時間
+- Phase 3: 12時間
+- Phase 4: 8時間
+- Phase 5: 10時間
+- Phase 6: 6時間
+- Phase 7: 8時間
+- Phase 8: 6時間
+- Phase 9: 6時間
+
+**合計**: 76時間（約2週間）
 
 ---
 
 ## 備考
-- 各Phaseは独立して完結させる
-- 問題発生時は即座に対応、次Phaseに持ち越さない
-- TDDサイクルを厳守し、テストなしコードは書かない
-- A*アルゴリズムのパフォーマンスに特に注意
+- 各Phaseは独立して実装・テスト可能
+- TDDサイクルを厳守
+- リファクタリングは必ずテストが通った状態で実施
+- 進捗は実装計画書のチェックボックスで管理

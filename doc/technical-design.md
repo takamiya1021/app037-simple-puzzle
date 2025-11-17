@@ -1,4 +1,4 @@
-# シンプルパズル - 技術設計書
+# カスタム画像パズル - 技術設計書
 
 ## 技術スタック選択
 
@@ -15,17 +15,20 @@
 - TypeScript でパズルロジックの型安全性を確保
 
 ### AI 統合
-- **Primary**: Google Gemini API（gemini-1.5-flash）
-- **Fallback**: OpenAI API（gpt-4o-mini）
+- **Gemini 2.5 Flash**: ヒント生成・プレイスタイル分析
+- **Imagen 4.0**: AI画像生成
 
 **選択理由**:
-- Gemini Flash は高速・低コスト
-- ヒント生成・プレイスタイル分析に最適
+- Gemini 2.5 Flash は高速・低コスト
+- Imagen 4.0 は高品質な画像生成
 
 ### パズルアルゴリズム
 - **A*アルゴリズム**: 最適解計算
 - **Manhattan距離**: ヒューリスティック関数
-- **IDA*（Iterative Deepening A*）**: 大きなパズルサイズ用
+
+### 画像処理
+- **Canvas API**: 画像分割・トリミング・リサイズ
+- **FileReader API**: 画像アップロード
 
 ### データ管理
 - **IndexedDB**: ローカルデータ永続化（Dexie.js 使用）
@@ -34,6 +37,9 @@
 ### PWA
 - **Workbox**: Service Worker 管理（Next.js PWA プラグイン）
 - **next-pwa**: Next.js 向け PWA 設定
+
+### 音声
+- **Web Audio API**: 効果音再生
 
 ---
 
@@ -44,45 +50,66 @@
 ```
 app/
 ├── layout.tsx                    # ルートレイアウト
-├── page.tsx                      # トップページ（難易度選択）
-├── play/
-│   └── page.tsx                  # プレイ画面
-├── results/
-│   └── page.tsx                  # 結果・分析画面
-├── history/
-│   └── page.tsx                  # プレイ履歴
-└── settings/
-    └── page.tsx                  # 設定画面
+├── page.tsx                      # メインページ（画像選択 + パズル）
+├── actions/
+│   ├── ai.ts                     # AI関連Server Actions
+│   └── image.ts                  # 画像生成Server Actions
+└── globals.css                   # グローバルスタイル
 
 components/
+├── ImageSelector.tsx             # 画像選択UI（3つの方法）
+├── ImageUploader.tsx             # 画像アップロード
+├── AIImageGenerator.tsx          # AI画像生成
+├── PresetImageSelector.tsx       # プリセット画像選択
 ├── PuzzleBoard.tsx               # パズルボード本体
-├── Tile.tsx                      # 個別タイル
-├── GameStats.tsx                 # 統計表示
+├── Tile.tsx                      # 個別タイル（画像表示）
+├── GameControls.tsx              # ゲームコントロール
+├── GameStats.tsx                 # 統計表示（タイマー・手数）
 ├── Timer.tsx                     # タイマー
 ├── MoveCounter.tsx               # 手数カウンター
-├── AIAssist.tsx                  # AIアシスト機能
 ├── HintButton.tsx                # ヒントボタン
 ├── OptimalSolutionViewer.tsx     # 最適解表示
 ├── AnalysisReport.tsx            # プレイスタイル分析
-├── DifficultySelector.tsx        # 難易度選択
-├── ModeSelector.tsx              # モード選択
-└── ProgressChart.tsx             # 上達グラフ
+├── GameModeSelector.tsx          # ゲームモード選択
+├── SizeSelector.tsx              # パズルサイズ選択
+├── HistoryView.tsx               # プレイ履歴
+├── SettingsModal.tsx             # 設定モーダル（APIキー）
+└── ErrorBoundary.tsx             # エラーバウンダリ
 
 lib/
 ├── puzzle/
 │   ├── generator.ts              # パズル生成
 │   ├── solver.ts                 # A*ソルバー
-│   ├── validator.ts              # 移動可否判定
-│   └── animator.ts               # アニメーション制御
+│   ├── validator.ts              # 移動可否判定・完成判定
+│   └── types.ts                  # 型定義
+├── image/
+│   ├── processor.ts              # 画像処理（分割・トリミング）
+│   ├── uploader.ts               # アップロード処理
+│   └── presets.ts                # プリセット画像定義
 ├── ai/
-│   ├── generateHint.ts           # AIヒント生成
+│   ├── hintGenerator.ts          # AIヒント生成（A* + Gemini）
 │   └── analyzePlay.ts            # AIプレイ分析
+├── audio/
+│   └── soundManager.ts           # 効果音管理
 ├── db/
 │   ├── schema.ts                 # IndexedDB スキーマ
 │   └── operations.ts             # CRUD 操作
 └── utils/
+    ├── apiKeyStorage.ts          # APIキー管理
     ├── constants.ts              # 定数定義
     └── helpers.ts                # ヘルパー関数
+
+public/
+├── sounds/
+│   ├── move.mp3                  # タイル移動音
+│   └── complete.mp3              # 完成音
+├── presets/
+│   ├── animals/                  # プリセット画像（動物）
+│   ├── sea/                      # プリセット画像（海の生物）
+│   └── landscapes/               # プリセット画像（景色）
+├── manifest.json                 # PWA Manifest
+├── icon-192.png                  # アプリアイコン
+└── icon-512.png                  # アプリアイコン
 ```
 
 ---
@@ -94,24 +121,24 @@ lib/
 interface PuzzleGame {
   id: string;                     // UUID
   timestamp: number;              // 開始時刻（Unix time）
-  mode: 'timeAttack' | 'minMoves' | 'freePlay'; // ゲームモード
-  difficulty: 'beginner' | 'intermediate' | 'advanced' | 'custom'; // 難易度
-  size: number;                   // パズルサイズ（4, 5, 9, 10, 11...）
-  displayMode: 'number' | 'image'; // 表示モード
-  initialState: number[];         // 初期配置
+  mode: 'freePlay' | 'timeAttack' | 'moveChallenge'; // ゲームモード
+  size: 4 | 5 | 6;                // パズルサイズ
+  imageData: string;              // 画像データ（Base64 or URL）
+  imageSource: 'upload' | 'ai' | 'preset'; // 画像ソース
   moves: Move[];                  // 移動履歴
   duration: number;               // プレイ時間（秒）
   moveCount: number;              // 総手数
   hintsUsed: number;              // ヒント使用回数
   completed: boolean;             // クリア済みか
-  aiAdvice: string;               // AIアドバイス
+  efficiency: number;             // 効率性（最適解との比率）
+  aiAdvice?: string;              // AIアドバイス
 }
 ```
 
 ### 2. Move（移動）
 ```typescript
 interface Move {
-  tileNumber: number;             // 移動したタイル番号
+  tileIndex: number;              // 移動したタイルのインデックス
   from: Position;                 // 移動前の位置
   to: Position;                   // 移動後の位置
   timestamp: number;              // 移動時刻
@@ -126,21 +153,113 @@ interface Position {
 ### 3. PuzzleState（パズル状態）
 ```typescript
 interface PuzzleState {
-  board: number[][];              // 2次元配列（0は空きマス）
+  tiles: TileData[][];            // 2次元配列（タイルデータ）
   emptyPos: Position;             // 空きマスの位置
   moveCount: number;              // 現在の手数
+  size: 4 | 5 | 6;                // パズルサイズ
+}
+
+interface TileData {
+  index: number;                  // タイル番号（0は空きマス）
+  imageFragment?: ImageFragment;  // 画像の断片
+}
+
+interface ImageFragment {
+  imageData: string;              // 画像データ（Base64 or URL）
+  sx: number;                     // ソース画像のx座標
+  sy: number;                     // ソース画像のy座標
+  sWidth: number;                 // ソース画像の幅
+  sHeight: number;                // ソース画像の高さ
 }
 ```
 
 ### 4. UserSettings（ユーザー設定）
 ```typescript
 interface UserSettings {
-  darkMode: boolean;              // ダークモード
   soundEnabled: boolean;          // 効果音
   animationSpeed: 'slow' | 'normal' | 'fast'; // アニメーション速度
-  shuffleCount: number;           // シャッフル回数（20-200）
-  aiProvider: 'gemini' | 'openai'; // AI プロバイダー
-  hintLimit: number;              // ヒント使用制限（回数）
+  geminiApiKey?: string;          // Gemini APIキー
+  imagenApiKey?: string;          // Imagen APIキー
+}
+```
+
+---
+
+## 画像処理設計
+
+### 画像アップロード処理（lib/image/uploader.ts）
+
+```typescript
+export async function processUploadedImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        // 正方形にトリミング
+        const size = Math.min(img.width, img.height);
+        const canvas = document.createElement('canvas');
+        canvas.width = 600;  // 最終サイズ
+        canvas.height = 600;
+
+        const ctx = canvas.getContext('2d')!;
+
+        // 中央部分を切り取って正方形に
+        const sx = (img.width - size) / 2;
+        const sy = (img.height - size) / 2;
+
+        ctx.drawImage(img, sx, sy, size, size, 0, 0, 600, 600);
+
+        // Base64に変換
+        resolve(canvas.toDataURL('image/jpeg', 0.9));
+      };
+      img.src = e.target?.result as string;
+    };
+
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+```
+
+### 画像分割処理（lib/image/processor.ts）
+
+```typescript
+export function splitImageIntoTiles(
+  imageData: string,
+  size: 4 | 5 | 6
+): ImageFragment[][] {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d')!;
+  const img = new Image();
+
+  img.src = imageData;
+
+  const tileWidth = 600 / size;
+  const tileHeight = 600 / size;
+
+  const tiles: ImageFragment[][] = [];
+
+  for (let row = 0; row < size; row++) {
+    tiles[row] = [];
+    for (let col = 0; col < size; col++) {
+      // 最後のタイル（右下）は空きマス
+      if (row === size - 1 && col === size - 1) {
+        tiles[row][col] = null; // 空きマス
+      } else {
+        tiles[row][col] = {
+          imageData,
+          sx: col * tileWidth,
+          sy: row * tileHeight,
+          sWidth: tileWidth,
+          sHeight: tileHeight,
+        };
+      }
+    }
+  }
+
+  return tiles;
 }
 ```
 
@@ -148,26 +267,35 @@ interface UserSettings {
 
 ## パズルアルゴリズム設計
 
-### パズル生成アルゴリズム
+### パズル生成アルゴリズム（lib/puzzle/generator.ts）
 
 **要件**: 必ず解ける配置を生成する
 
 **実装方針**:
 1. 完成状態から逆算してランダム移動
 2. シャッフル回数を難易度に応じて調整
+   - 4×4: 30回
+   - 5×5: 50回
+   - 6×6: 80回
 
-**コード例（lib/puzzle/generator.ts）**:
 ```typescript
-export function generatePuzzle(size: number, shuffleCount: number): PuzzleState {
-  // 完成状態を作成（1, 2, 3, ..., 0）
-  const solved = createSolvedState(size);
+export function generatePuzzle(size: 4 | 5 | 6, imageData: string): PuzzleState {
+  // 完成状態を作成
+  const tiles = createSolvedState(size, imageData);
 
-  let state = { ...solved };
-  const emptyPos = { row: size - 1, col: size - 1 };
+  let state: PuzzleState = {
+    tiles,
+    emptyPos: { row: size - 1, col: size - 1 },
+    moveCount: 0,
+    size,
+  };
+
+  // シャッフル回数
+  const shuffleCount = size === 4 ? 30 : size === 5 ? 50 : 80;
 
   // ランダムに移動（必ず解ける配置を保証）
   for (let i = 0; i < shuffleCount; i++) {
-    const validMoves = getValidMoves(state, emptyPos);
+    const validMoves = getValidMoves(state);
     const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
     state = applyMove(state, randomMove);
   }
@@ -176,22 +304,30 @@ export function generatePuzzle(size: number, shuffleCount: number): PuzzleState 
 }
 ```
 
-### A*ソルバー（最適解計算）
+### A*ソルバー（最適解計算）（lib/puzzle/solver.ts）
 
 **アルゴリズム**: A*探索
 **ヒューリスティック関数**: Manhattan距離
 
-**実装方針**:
 ```typescript
+interface Node {
+  state: PuzzleState;
+  g: number;  // 開始からのコスト
+  h: number;  // ヒューリスティック（ゴールまでの推定コスト）
+  f: number;  // 総コスト（g + h）
+  parent: Node | null;
+  move?: Move;
+}
+
 export function solvePuzzle(initialState: PuzzleState): Move[] {
   const openSet = new PriorityQueue<Node>();
   const closedSet = new Set<string>();
 
   const startNode: Node = {
     state: initialState,
-    g: 0, // 開始からのコスト
-    h: calculateManhattanDistance(initialState), // ヒューリスティック
-    f: 0 + calculateManhattanDistance(initialState), // 総コスト
+    g: 0,
+    h: calculateManhattanDistance(initialState),
+    f: 0 + calculateManhattanDistance(initialState),
     parent: null,
   };
 
@@ -201,39 +337,39 @@ export function solvePuzzle(initialState: PuzzleState): Move[] {
     const current = openSet.dequeue();
 
     if (isGoalState(current.state)) {
-      return reconstructPath(current); // 解の経路を再構築
+      return reconstructPath(current);
     }
 
     closedSet.add(stateToString(current.state));
 
     // 隣接ノードを展開
-    const neighbors = getNeighbors(current.state);
-    for (const neighbor of neighbors) {
+    const neighbors = getNeighborStates(current.state);
+    for (const { state: neighbor, move } of neighbors) {
       if (closedSet.has(stateToString(neighbor))) continue;
 
       const g = current.g + 1;
       const h = calculateManhattanDistance(neighbor);
       const f = g + h;
 
-      openSet.enqueue({ state: neighbor, g, h, f, parent: current }, f);
+      openSet.enqueue({ state: neighbor, g, h, f, parent: current, move }, f);
     }
   }
 
-  return []; // 解なし
+  return []; // 解なし（通常は発生しない）
 }
 
 function calculateManhattanDistance(state: PuzzleState): number {
   let distance = 0;
-  const size = state.board.length;
+  const size = state.size;
 
   for (let row = 0; row < size; row++) {
     for (let col = 0; col < size; col++) {
-      const value = state.board[row][col];
-      if (value === 0) continue; // 空きマスは無視
+      const tile = state.tiles[row][col];
+      if (tile.index === 0) continue; // 空きマスは無視
 
       // 目標位置を計算
-      const targetRow = Math.floor((value - 1) / size);
-      const targetCol = (value - 1) % size;
+      const targetRow = Math.floor((tile.index - 1) / size);
+      const targetCol = (tile.index - 1) % size;
 
       // Manhattan距離を加算
       distance += Math.abs(row - targetRow) + Math.abs(col - targetCol);
@@ -248,129 +384,126 @@ function calculateManhattanDistance(state: PuzzleState): number {
 
 ## AI API 統合設計
 
-### ヒント生成フロー
+### ヒント生成フロー（lib/ai/hintGenerator.ts）
 
 ```
 1. 現在のパズル状態を取得
    ↓
 2. A*アルゴリズムで次の最適な一手を計算
    ↓
-3. AI API にプロンプト送信
-   プロンプト例:
-   「パズルのヒントを生成してください。
-   次の最適な一手: タイル5を右に移動
-   理由を簡潔に説明してください。」
+3. Gemini API にプロンプト送信
    ↓
-4. AI がヒントを生成
+4. AI がヒント（理由付き）を生成
    ↓
-5. ヒント表示 + 手数ペナルティ
+5. ヒント表示
 ```
 
-### プレイスタイル分析フロー
-
-```
-1. ゲーム完了後、移動履歴を収集
-   ↓
-2. 統計を計算
-   - 平均手数 vs 最適解
-   - 移動パターン分析
-   - 効率性スコア
-   ↓
-3. AI API にプロンプト送信
-   プロンプト例:
-   「以下のパズルプレイを分析し、改善アドバイスを提供してください。
-   - 手数: 85手（最適解: 52手）
-   - 効率性: 61%
-   - よく使う移動: 左下方向が多い」
-   ↓
-4. AI が分析レポートを生成
-   ↓
-5. 結果画面に表示
-```
-
-### API 実装（Server Actions）
-
-**app/actions/ai.ts**
+**app/actions/ai.ts**:
 ```typescript
 'use server';
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+import { PuzzleState, Move } from '@/lib/puzzle/types';
+import { getNextOptimalMove } from '@/lib/ai/hintGenerator';
 
 export async function generateHint(
-  nextMove: Move,
-  currentState: PuzzleState
-): Promise<string> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  state: PuzzleState,
+  clientApiKey?: string
+): Promise<HintResponse> {
+  // 次の最適な一手を計算
+  const nextMove = getNextOptimalMove(state);
+
+  if (!nextMove) {
+    return {
+      success: false,
+      error: 'パズルは既に完成しているか、解が見つかりません。',
+    };
+  }
+
+  // APIキー取得
+  const apiKey = clientApiKey || process.env.GEMINI_API_KEY;
+
+  if (!apiKey) {
+    // フォールバック: シンプルなメッセージ
+    return {
+      success: true,
+      hint: `このタイルを${nextMove.direction}に動かしましょう`,
+      move: nextMove,
+      isDefaultMessage: true,
+    };
+  }
+
+  // Gemini APIでヒント生成
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
   const prompt = `
 スライドパズルのヒントを生成してください。
 
 【次の最適な一手】
-- タイル番号: ${nextMove.tileNumber}
-- 移動方向: ${getMoveDirection(nextMove)}
+- 移動方向: ${nextMove.direction}
 
 【指示】
-- 50文字程度で簡潔に
+- 30文字程度で簡潔に
 - なぜこの移動が良いかを説明
 - ポジティブなトーンで
 `;
 
   const result = await model.generateContent(prompt);
-  return result.response.text();
-}
+  const hint = result.response.text();
 
-export async function analyzePlayStyle(
-  game: PuzzleGame,
-  optimalMoves: number
-): Promise<string> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
-  const efficiency = (optimalMoves / game.moveCount) * 100;
-
-  const prompt = `
-スライドパズルのプレイスタイルを分析し、具体的なアドバイスを提供してください。
-
-【データ】
-- 手数: ${game.moveCount}手
-- 最適解: ${optimalMoves}手
-- 効率性: ${efficiency.toFixed(1)}%
-- プレイ時間: ${Math.floor(game.duration / 60)}分${game.duration % 60}秒
-
-【指示】
-- 200文字程度で簡潔に
-- 具体的な改善ポイントを提案
-- ポジティブなトーンで
-`;
-
-  const result = await model.generateContent(prompt);
-  return result.response.text();
+  return {
+    success: true,
+    hint,
+    move: nextMove,
+    isDefaultMessage: false,
+  };
 }
 ```
 
----
+### AI画像生成（app/actions/image.ts）
 
-## IndexedDB スキーマ（Dexie.js）
-
-**lib/db/schema.ts**
 ```typescript
-import Dexie, { Table } from 'dexie';
+'use server';
 
-export class PuzzleGameDB extends Dexie {
-  games!: Table<PuzzleGame>;
-  settings!: Table<UserSettings>;
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-  constructor() {
-    super('PuzzleGameDB');
-    this.version(1).stores({
-      games: 'id, timestamp, difficulty, mode, completed',
-      settings: 'id',
+export async function generateImage(
+  prompt: string,
+  clientApiKey?: string
+): Promise<ImageResponse> {
+  const apiKey = clientApiKey || process.env.GEMINI_API_KEY;
+
+  if (!apiKey) {
+    return {
+      success: false,
+      error: 'APIキーが設定されていません',
+    };
+  }
+
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: 'imagen-4.0-generate-001' });
+
+    const result = await model.generateContent({
+      prompt: prompt,
+      // Imagen specific parameters
     });
+
+    const imageData = result.response.images[0].data; // Base64
+
+    return {
+      success: true,
+      imageData: `data:image/png;base64,${imageData}`,
+    };
+  } catch (error) {
+    console.error('Image generation error:', error);
+    return {
+      success: false,
+      error: '画像生成中にエラーが発生しました',
+    };
   }
 }
-
-export const db = new PuzzleGameDB();
 ```
 
 ---
@@ -382,15 +515,29 @@ export const db = new PuzzleGameDB();
 **キャッシュ戦略**:
 - **App Shell**: Cache First（HTML、CSS、JS）
 - **画像**: Cache First
+- **プリセット画像**: Precache（事前キャッシュ）
 - **API レスポンス**: Network First → Cache Fallback
 
-**next.config.js**
+**next.config.js**:
 ```javascript
 const withPWA = require('next-pwa')({
   dest: 'public',
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
+  runtimeCaching: [
+    {
+      urlPattern: /^https:\/\/generativelanguage\.googleapis\.com\/.*/i,
+      handler: 'NetworkFirst',
+      options: {
+        cacheName: 'gemini-api-cache',
+        expiration: {
+          maxEntries: 32,
+          maxAgeSeconds: 24 * 60 * 60, // 24時間
+        },
+      },
+    },
+  ],
 });
 
 module.exports = withPWA({
@@ -398,16 +545,16 @@ module.exports = withPWA({
 });
 ```
 
-**public/manifest.json**
+**public/manifest.json**:
 ```json
 {
-  "name": "シンプルパズル",
+  "name": "カスタム画像パズル",
   "short_name": "パズル",
-  "description": "AI搭載スライドパズルゲーム",
+  "description": "自分の画像でパズル！AI画像生成も",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#1e3a8a",
-  "theme_color": "#6b21a8",
+  "background_color": "#fef3c7",
+  "theme_color": "#f59e0b",
   "icons": [
     {
       "src": "/icon-192.png",
@@ -425,15 +572,41 @@ module.exports = withPWA({
 
 ---
 
+## IndexedDB スキーマ（Dexie.js）
+
+**lib/db/schema.ts**:
+```typescript
+import Dexie, { Table } from 'dexie';
+
+export class PuzzleGameDB extends Dexie {
+  games!: Table<PuzzleGame>;
+  settings!: Table<UserSettings>;
+
+  constructor() {
+    super('PuzzleGameDB');
+    this.version(1).stores({
+      games: 'id, timestamp, size, mode, completed, efficiency',
+      settings: 'id',
+    });
+  }
+}
+
+export const db = new PuzzleGameDB();
+```
+
+---
+
 ## アニメーション設計（Framer Motion）
 
 ### タイル移動アニメーション
 
-**components/Tile.tsx**
+**components/Tile.tsx**:
 ```typescript
 import { motion } from 'framer-motion';
 
-export function Tile({ number, position, onClick }: TileProps) {
+export function Tile({ tile, position, onClick, size }: TileProps) {
+  if (tile.index === 0) return <div className="empty-tile" />;
+
   return (
     <motion.div
       layout
@@ -442,53 +615,14 @@ export function Tile({ number, position, onClick }: TileProps) {
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
       className="tile"
-    >
-      {number}
-    </motion.div>
+      style={{
+        backgroundImage: `url(${tile.imageFragment.imageData})`,
+        backgroundPosition: `-${tile.imageFragment.sx}px -${tile.imageFragment.sy}px`,
+        backgroundSize: `${size * 100}px ${size * 100}px`,
+      }}
+    />
   );
 }
-```
-
----
-
-## ファイル構成
-
-```
-app037-simple-puzzle/
-├── app/
-│   ├── layout.tsx
-│   ├── page.tsx
-│   ├── play/
-│   ├── results/
-│   ├── history/
-│   ├── settings/
-│   └── actions/
-│       └── ai.ts
-├── components/
-│   ├── PuzzleBoard.tsx
-│   ├── Tile.tsx
-│   ├── GameStats.tsx
-│   ├── AIAssist.tsx
-│   └── ...
-├── lib/
-│   ├── puzzle/
-│   ├── ai/
-│   ├── db/
-│   └── utils/
-├── public/
-│   ├── manifest.json
-│   ├── icon-192.png
-│   └── icon-512.png
-├── doc/
-│   ├── requirements.md
-│   ├── technical-design.md
-│   └── implementation-plan.md
-├── png/
-│   └── ui-reference.png
-├── .env.local
-├── next.config.js
-├── package.json
-└── tsconfig.json
 ```
 
 ---
@@ -496,15 +630,18 @@ app037-simple-puzzle/
 ## セキュリティ・パフォーマンス考慮
 
 ### セキュリティ
-- ✅ API キー環境変数管理（`.env.local`）
+- ✅ API キー localStorage管理（XSS対策として適切なCSP設定）
 - ✅ HTTPS 必須（PWA 要件）
-- ✅ XSS 対策（React デフォルト）
+- ✅ 画像アップロードのファイルサイズ制限（5MB）
+- ✅ 画像形式バリデーション（JPEG、PNG、GIFのみ）
 
 ### パフォーマンス
-- ✅ A*アルゴリズムの最適化（大きなパズルサイズ対応）
+- ✅ A*アルゴリズムの最適化（6×6で30秒以内）
+- ✅ 画像処理の非同期化（Worker使用検討）
 - ✅ タイルアニメーションのGPU加速（transform使用）
 - ✅ IndexedDB の非同期操作
 - ✅ Service Worker によるキャッシュ
+- ✅ 画像の遅延読み込み・最適化
 
 ---
 
@@ -513,14 +650,16 @@ app037-simple-puzzle/
 ### 単体テスト（Jest）
 - `lib/puzzle/generator.ts`: パズル生成ロジック
 - `lib/puzzle/solver.ts`: A*ソルバー
-- `lib/puzzle/validator.ts`: 移動可否判定
+- `lib/puzzle/validator.ts`: 移動可否判定・完成判定
+- `lib/image/processor.ts`: 画像分割ロジック
 
 ### 統合テスト（React Testing Library）
 - `PuzzleBoard.tsx`: タイル移動・表示
+- `ImageSelector.tsx`: 画像選択フロー
 - `GameStats.tsx`: 統計計算
 
 ### E2E テスト（Playwright）
-- フルゲームフロー
+- フルゲームフロー（画像アップロード → パズル → 完成）
 - AI機能動作確認
 - オフライン動作確認
 
@@ -534,13 +673,12 @@ app037-simple-puzzle/
     "next": "14.2.x",
     "react": "18.x",
     "react-dom": "18.x",
-    "@google/generative-ai": "^0.21.0",
+    "@google/generative-ai": "^0.24.0",
     "dexie": "^4.0.0",
     "dexie-react-hooks": "^1.1.0",
     "zustand": "^4.5.0",
     "framer-motion": "^11.0.0",
-    "next-pwa": "^5.6.0",
-    "recharts": "^2.12.0"
+    "next-pwa": "^5.6.0"
   },
   "devDependencies": {
     "typescript": "^5",
@@ -560,15 +698,52 @@ app037-simple-puzzle/
 
 ## 実装優先順位
 
-1. **Phase 0**: プロジェクトセットアップ、テスト環境構築
-2. **Phase 1**: パズル生成・表示・基本移動機能
-3. **Phase 2**: A*ソルバー実装
-4. **Phase 3**: タイマー・手数カウント
-5. **Phase 4**: AIヒント生成
-6. **Phase 5**: AI分析・アドバイス
-7. **Phase 6**: 画像モード
-8. **Phase 7**: PWA対応
-9. **Phase 8**: 履歴・グラフ機能
+### Phase 0: プロジェクトセットアップ
+- Next.js プロジェクト初期化
+- 依存パッケージインストール
+- 基本ディレクトリ構造作成
+- PWA設定
+- テスト環境構築
+
+### Phase 1: 画像処理基盤
+- 画像アップロード機能
+- 画像分割ロジック
+- プリセット画像準備
+
+### Phase 2: パズル基本機能
+- パズル生成
+- タイル表示・移動
+- 完成判定
+
+### Phase 3: A*ソルバー
+- A*アルゴリズム実装
+- 最適解計算
+
+### Phase 4: ゲームモード・統計
+- タイマー・手数カウント
+- ゲームモード実装
+- IndexedDB統合
+
+### Phase 5: AI機能
+- AIヒント生成（Gemini）
+- プレイスタイル分析
+
+### Phase 6: AI画像生成
+- Imagen統合
+- 画像生成UI
+
+### Phase 7: UI/UX磨き込み
+- アニメーション
+- 効果音
+- ポップなデザイン適用
+
+### Phase 8: PWA完成
+- Service Worker完全動作
+- オフライン対応
+
+### Phase 9: 履歴・統計
+- プレイ履歴表示
+- 統計グラフ
 
 ---
 
@@ -578,4 +753,5 @@ app037-simple-puzzle/
 - ✅ PWA として完全動作（オフライン含む）
 - ✅ Lighthouse スコア 90点以上
 - ✅ AI 機能が正常動作
-- ✅ A*ソルバーが5秒以内に最適解を計算
+- ✅ A*ソルバーが各サイズで目標時間内に最適解を計算
+- ✅ 画像処理が1秒以内に完了
