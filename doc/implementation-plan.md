@@ -19,13 +19,13 @@
 ## Phase 0: テスト環境構築（予定工数: 2時間）
 
 ### タスク
-- [ ] Jestセットアップ（Red）
+- [x] Jestセットアップ（Red）
   - jest.config.js作成
   - テスト実行確認（失敗することを確認）
-- [ ] 設定ファイル作成（Green）
+- [x] 設定ファイル作成（Green）
   - jest.setup.ts作成
   - Testing Library設定
-- [ ] サンプルテスト作成（Refactor）
+- [x] サンプルテスト作成（Refactor）
   - 簡単なユニットテスト作成
   - テスト実行確認（成功）
 
@@ -40,37 +40,37 @@
 ### タスク
 
 #### 1.1 画像アップロード処理
-- [ ] テスト作成（Red）：`lib/image/uploader.test.ts`
+- [x] テスト作成（Red）：`lib/image/uploader.test.ts`
   - ファイル読み込みテスト
   - 正方形トリミングテスト
   - Base64変換テスト
-- [ ] 実装（Green）：`lib/image/uploader.ts`
+- [x] 実装（Green）：`lib/image/uploader.ts`
   - FileReader API使用
   - Canvas APIで正方形トリミング
   - Base64変換
-- [ ] リファクタリング（Refactor）
+- [x] リファクタリング（Refactor）
   - エラーハンドリング追加
   - パフォーマンス最適化
 
 #### 1.2 画像分割処理
-- [ ] テスト作成（Red）：`lib/image/processor.test.ts`
+- [x] テスト作成（Red）：`lib/image/processor.test.ts`
   - 4×4分割テスト
   - 5×5分割テスト
   - 6×6分割テスト
   - 空きマス位置テスト
-- [ ] 実装（Green）：`lib/image/processor.ts`
+- [x] 実装（Green）：`lib/image/processor.ts`
   - Canvas APIで画像分割
   - ImageFragment配列生成
-- [ ] リファクタリング（Refactor）
+- [x] リファクタリング（Refactor）
   - コード整理
   - 型安全性向上
 
 #### 1.3 プリセット画像準備
-- [ ] プリセット画像収集・配置
+- [x] プリセット画像収集・配置
   - `public/presets/animals/` に3〜5枚
   - `public/presets/sea/` に3〜5枚
   - `public/presets/landscapes/` に3〜5枚
-- [ ] 定義ファイル作成：`lib/image/presets.ts`
+- [x] 定義ファイル作成：`lib/image/presets.ts`
   - プリセット画像のメタデータ
 
 ### 完了条件
@@ -85,41 +85,41 @@
 ### タスク
 
 #### 2.1 型定義
-- [ ] `lib/puzzle/types.ts`作成
+- [x] `lib/puzzle/types.ts`作成
   - PuzzleState、TileData、Position等の型定義
 
 #### 2.2 パズル生成ロジック
-- [ ] テスト作成（Red）：`lib/puzzle/generator.test.ts`
+- [x] テスト作成（Red）：`lib/puzzle/generator.test.ts`
   - 完成状態生成テスト
   - シャッフルテスト（必ず解ける配置になるか）
   - サイズ別テスト（4×4、5×5、6×6）
-- [ ] 実装（Green）：`lib/puzzle/generator.ts`
+- [x] 実装（Green）：`lib/puzzle/generator.ts`
   - createSolvedState実装
   - generatePuzzle実装
   - getValidMoves実装
   - applyMove実装
-- [ ] リファクタリング（Refactor）
+- [x] リファクタリング（Refactor）
   - シャッフル回数調整
   - コード最適化
 
 #### 2.3 移動可否判定
-- [ ] テスト作成（Red）：`lib/puzzle/validator.test.ts`
+- [x] テスト作成（Red）：`lib/puzzle/validator.test.ts`
   - 移動可能判定テスト
   - 完成判定テスト
   - 不正な移動のテスト
-- [ ] 実装（Green）：`lib/puzzle/validator.ts`
+- [x] 実装（Green）：`lib/puzzle/validator.ts`
   - canMove実装
   - isComplete実装
-- [ ] リファクタリング（Refactor）
+- [x] リファクタリング（Refactor）
 
 #### 2.4 パズルボードコンポーネント
-- [ ] テスト作成（Red）：`components/PuzzleBoard.test.tsx`
+- [x] テスト作成（Red）：`components/PuzzleBoard.test.tsx`
   - ボード表示テスト
   - タイルクリックテスト
-- [ ] 実装（Green）：
+- [x] 実装（Green）：
   - `components/PuzzleBoard.tsx`
   - `components/Tile.tsx`
-- [ ] リファクタリング（Refactor）
+- [x] リファクタリング（Refactor）
   - アクセシビリティ改善
 
 ### 完了条件
@@ -134,24 +134,24 @@
 ### タスク
 
 #### 3.1 A*アルゴリズム実装
-- [ ] テスト作成（Red）：`lib/puzzle/solver.test.ts`
+- [x] テスト作成（Red）：`lib/puzzle/solver.test.ts`
   - 簡単な配置の解テスト
   - Manhattan距離計算テスト
   - 各サイズ（4×4、5×5、6×6）のテスト
   - パフォーマンステスト（時間計測）
-- [ ] 実装（Green）：`lib/puzzle/solver.ts`
+- [x] 実装（Green）：`lib/puzzle/solver.ts`
   - PriorityQueue実装
   - calculateManhattanDistance実装
   - solvePuzzle実装
   - reconstructPath実装
-- [ ] リファクタリング（Refactor）
+- [x] リファクタリング（Refactor）
   - パフォーマンス最適化
   - メモリ効率改善
 
 #### 3.2 最適解表示コンポーネント
-- [ ] テスト作成（Red）：`components/OptimalSolutionViewer.test.tsx`
-- [ ] 実装（Green）：`components/OptimalSolutionViewer.tsx`
-- [ ] リファクタリング（Refactor）
+- [x] テスト作成（Red）：`components/OptimalSolutionViewer.test.tsx`
+- [x] 実装（Green）：`components/OptimalSolutionViewer.tsx`
+- [x] リファクタリング（Refactor）
 
 ### 完了条件
 - ✅ A*ソルバーのテストがパス
@@ -168,31 +168,31 @@
 ### タスク
 
 #### 4.1 タイマー・手数カウンター
-- [ ] テスト作成（Red）
+- [x] テスト作成（Red）
   - `components/Timer.test.tsx`
   - `components/MoveCounter.test.tsx`
-- [ ] 実装（Green）
+- [x] 実装（Green）
   - `components/Timer.tsx`
   - `components/MoveCounter.tsx`
   - `components/GameStats.tsx`
-- [ ] リファクタリング（Refactor）
+- [x] リファクタリング（Refactor）
 
 #### 4.2 ゲームモード
-- [ ] テスト作成（Red）：`components/GameModeSelector.test.tsx`
-- [ ] 実装（Green）
+- [x] テスト作成（Red）：`components/GameModeSelector.test.tsx`
+- [x] 実装（Green）
   - `components/GameModeSelector.tsx`
   - フリープレイ・タイムアタック・手数チャレンジ
-- [ ] リファクタリング（Refactor）
+- [x] リファクタリング（Refactor）
 
 #### 4.3 IndexedDB統合
-- [ ] テスト作成（Red）：`lib/db/operations.test.ts`
+- [x] テスト作成（Red）：`lib/db/operations.test.ts`
   - ゲーム保存テスト
   - ゲーム取得テスト
   - 設定保存テスト
-- [ ] 実装（Green）
+- [x] 実装（Green）
   - `lib/db/schema.ts`（Dexie.js）
   - `lib/db/operations.ts`
-- [ ] リファクタリング（Refactor）
+- [x] リファクタリング（Refactor）
 
 ### 完了条件
 - ✅ タイマー・手数カウントが正常動作
@@ -206,32 +206,32 @@
 ### タスク
 
 #### 5.1 AIヒント生成
-- [ ] テスト作成（Red）
+- [x] テスト作成（Red）
   - `lib/ai/hintGenerator.test.ts`
   - `app/actions/ai.test.ts`
-- [ ] 実装（Green）
+- [x] 実装（Green）
   - `lib/ai/hintGenerator.ts`
   - `app/actions/ai.ts`（generateHint）
   - `components/HintButton.tsx`
-- [ ] リファクタリング（Refactor）
+- [x] リファクタリング（Refactor）
   - APIキー未設定時のフォールバック
   - エラーハンドリング
 
 #### 5.2 プレイスタイル分析
-- [ ] テスト作成（Red）
+- [x] テスト作成（Red）
   - `lib/ai/analyzePlay.test.ts`
-- [ ] 実装（Green）
+- [x] 実装（Green）
   - `lib/ai/analyzePlay.ts`
   - `app/actions/ai.ts`（analyzePlayStyle）
   - `components/AnalysisReport.tsx`
-- [ ] リファクタリング（Refactor）
+- [x] リファクタリング（Refactor）
 
 #### 5.3 APIキー管理
-- [ ] テスト作成（Red）：`lib/utils/apiKeyStorage.test.ts`
-- [ ] 実装（Green）
+- [x] テスト作成（Red）：`lib/utils/apiKeyStorage.test.ts`
+- [x] 実装（Green）
   - `lib/utils/apiKeyStorage.ts`
   - `components/SettingsModal.tsx`
-- [ ] リファクタリング（Refactor）
+- [x] リファクタリング（Refactor）
 
 ### 完了条件
 - ✅ AIヒント・分析が動作
@@ -245,28 +245,28 @@
 ### タスク
 
 #### 6.1 Imagen統合
-- [ ] テスト作成（Red）：`app/actions/image.test.ts`
-- [ ] 実装（Green）
+- [x] テスト作成（Red）：`app/actions/image.test.ts`
+- [x] 実装（Green）
   - `app/actions/image.ts`（generateImage）
-- [ ] リファクタリング（Refactor）
+- [x] リファクタリング（Refactor）
   - エラーハンドリング
   - タイムアウト処理
 
 #### 6.2 画像生成UI
-- [ ] テスト作成（Red）：`components/AIImageGenerator.test.tsx`
-- [ ] 実装（Green）
+- [x] テスト作成（Red）：`components/AIImageGenerator.test.tsx`
+- [x] 実装（Green）
   - `components/AIImageGenerator.tsx`
   - プロンプト入力
   - ローディング表示
   - プレビュー
-- [ ] リファクタリング（Refactor）
+- [x] リファクタリング（Refactor）
 
 #### 6.3 画像選択統合
-- [ ] テスト作成（Red）：`components/ImageSelector.test.tsx`
-- [ ] 実装（Green）
+- [x] テスト作成（Red）：`components/ImageSelector.test.tsx`
+- [x] 実装（Green）
   - `components/ImageSelector.tsx`
   - アップロード・AI生成・プリセット選択
-- [ ] リファクタリング（Refactor）
+- [x] リファクタリング（Refactor）
 
 ### 完了条件
 - ✅ AI画像生成が動作
@@ -280,24 +280,24 @@
 ### タスク
 
 #### 7.1 アニメーション
-- [ ] Framer Motion導入
-- [ ] タイル移動アニメーション実装
-- [ ] 完成時アニメーション実装
+- [x] Framer Motion導入
+- [x] タイル移動アニメーション実装
+- [x] 完成時アニメーション実装
 
 #### 7.2 効果音
-- [ ] テスト作成（Red）：`lib/audio/soundManager.test.ts`
-- [ ] 実装（Green）
+- [x] テスト作成（Red）：`lib/audio/soundManager.test.ts`
+- [x] 実装（Green）
   - `lib/audio/soundManager.ts`
   - `public/sounds/move.mp3`準備
   - `public/sounds/complete.mp3`準備
-- [ ] リファクタリング（Refactor）
+- [x] リファクタリング（Refactor）
 
 #### 7.3 ポップなデザイン適用
-- [ ] Tailwind CSSでカラースキーム実装
+- [x] Tailwind CSSでカラースキーム実装
   - パステルカラー中心
   - 明るく楽しい配色
-- [ ] レスポンシブ対応
-- [ ] アクセシビリティ改善
+- [x] レスポンシブ対応
+- [x] アクセシビリティ改善
 
 ### 完了条件
 - ✅ アニメーションがスムーズ
@@ -311,23 +311,23 @@
 ### タスク
 
 #### 8.1 PWA設定
-- [ ] next.config.jsにnext-pwa追加
-- [ ] manifest.json作成
-- [ ] アイコン作成（192×192、512×512）
+- [x] next.config.jsにnext-pwa追加
+- [x] manifest.json作成
+- [x] アイコン作成（192×192、512×512）
 
 #### 8.2 Service Worker
-- [ ] キャッシュ戦略実装
+- [x] キャッシュ戦略実装
   - App Shell: Cache First
   - プリセット画像: Precache
   - API: Network First
-- [ ] オフライン対応確認
+- [x] オフライン対応確認
 
 #### 8.3 PWAテスト
-- [ ] Lighthouse監査
+- [x] Lighthouse監査
   - PWAスコア確認
   - パフォーマンススコア90点以上
   - アクセシビリティスコア90点以上
-- [ ] インストールテスト
+- [x] インストールテスト
 
 ### 完了条件
 - ✅ PWAとしてインストール可能
@@ -341,16 +341,16 @@
 ### タスク
 
 #### 9.1 プレイ履歴表示
-- [ ] テスト作成（Red）：`components/HistoryView.test.tsx`
-- [ ] 実装（Green）
+- [x] テスト作成（Red）：`components/HistoryView.test.tsx`
+- [x] 実装（Green）
   - `components/HistoryView.tsx`
   - 履歴一覧表示
   - ソート機能
-- [ ] リファクタリング（Refactor）
+- [x] リファクタリング（Refactor）
 
 #### 9.2 統計グラフ
-- [ ] 統計データ計算
-- [ ] グラフ表示（recharts使用検討）
+- [x] 統計データ計算
+- [x] グラフ表示（recharts使用検討）
   - クリアタイム推移
   - 手数推移
   - 難易度別ベスト
