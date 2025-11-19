@@ -44,5 +44,6 @@ export async function generateImage({ prompt, clientApiKey, modelFactory }: Gene
 
 function defaultImagenFactory(apiKey: string): ImagenModel {
   const genAI = new GoogleGenerativeAI(apiKey)
-  return genAI.getGenerativeModel({ model: 'imagen-4.0-generate-001' }) as ImagenModel
+  // GoogleGenerativeAI の戻り値を簡易インターフェースに合わせるため unknown を経由
+  return genAI.getGenerativeModel({ model: 'imagen-4.0-generate-001' }) as unknown as ImagenModel
 }
