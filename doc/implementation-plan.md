@@ -92,12 +92,13 @@
 - [x] テスト作成（Red）：`lib/puzzle/generator.test.ts`
   - 完成状態生成テスト
   - シャッフルテスト（必ず解ける配置になるか）
-  - サイズ別テスト（4×4、5×5、6×6）
+  - サイズ別テスト（4×4、5×5、9×9、10×10の代表値）
 - [x] 実装（Green）：`lib/puzzle/generator.ts`
   - createSolvedState実装
   - generatePuzzle実装
   - getValidMoves実装
   - applyMove実装
+- [ ] 追加実装: シングルブランクガードを`generator.ts`/`validator.ts`に組み込み、空きマスが複数生成された場合は例外をthrowして再生成
 - [x] リファクタリング（Refactor）
   - シャッフル回数調整
   - コード最適化
@@ -137,7 +138,7 @@
 - [x] テスト作成（Red）：`lib/puzzle/solver.test.ts`
   - 簡単な配置の解テスト
   - Manhattan距離計算テスト
-  - 各サイズ（4×4、5×5、6×6）のテスト
+  - 各サイズ（4×4、5×5、9×9、10×10）のテスト
   - パフォーマンステスト（時間計測）
 - [x] 実装（Green）：`lib/puzzle/solver.ts`
   - PriorityQueue実装
@@ -194,6 +195,19 @@
   - `lib/db/operations.ts`
 - [x] リファクタリング（Refactor）
 
+#### 4.4 HUD + カスタムサイズUI（新規）
+- [ ] テスト作成（Red）
+  - `components/GameModeSelector.test.tsx`にモードチップのスナップショットを追加
+  - `components/GameStats.test.tsx`でHUDカードの数値表示を検証
+  - `components/CustomSizeSlider.test.tsx`（新規）で4×4〜10×10をカバー
+- [ ] 実装（Green）
+  - `components/hud/ModeChips.tsx`でタイトル直下のチップを描画
+  - `components/hud/StatusHUD.tsx`を追加し、Timer/MoveCounter/サイズを合成
+  - `components/hud/CustomSizeSlider.tsx`でスライダーUI + ラベル
+- [ ] リファクタリング（Refactor）
+  - ストアの`size`/`mode`を書き換える際の副作用を整理
+  - HUDをモバイルでは折り返すレイアウトに調整
+
 ### 完了条件
 - ✅ タイマー・手数カウントが正常動作
 - ✅ IndexedDB保存・取得が動作
@@ -233,6 +247,18 @@
   - `components/SettingsModal.tsx`
 - [x] リファクタリング（Refactor）
 
+#### 5.4 AI設定UI強化（新規）
+- [ ] テスト作成（Red）
+  - `components/SettingsModal.test.tsx`でAPIキー検証結果の表示をテスト
+  - `components/settings/AISettingsPanel.test.tsx`を新設し、トグル/ヒント上限の状態遷移を確認
+- [ ] 実装（Green）
+  - `components/settings/AISettingsPanel.tsx`を追加し、Gemini（ヒント）/Gemini 2.5 Flash Image（画像）のキー入力・保存・検証フローを実装
+  - `useSettingsStore`に`aiAssistEnabled`/`autoAnalysisEnabled`/`hintLimit`/`lastValidatedAt`等を追加
+  - `HintButton`/`AnalysisReport`に設定値を反映してUIを出し分け
+- [ ] リファクタリング（Refactor）
+  - APIキーの暗号化保存ロジックを`lib/utils/apiKeyStorage.ts`へ集約
+  - UIのバリデーションメッセージを共通化
+
 ### 完了条件
 - ✅ AIヒント・分析が動作
 - ✅ APIキー管理が動作
@@ -244,10 +270,10 @@
 
 ### タスク
 
-#### 6.1 Imagen統合
+#### 6.1 Gemini 2.5 Flash Image統合
 - [x] テスト作成（Red）：`app/actions/image.test.ts`
 - [x] 実装（Green）
-  - `app/actions/image.ts`（generateImage）
+  - `app/actions/image.ts`（`gemini-2.5-flash-image` 呼び出し）
 - [x] リファクタリング（Refactor）
   - エラーハンドリング
   - タイムアウト処理
@@ -299,6 +325,12 @@
 - [x] レスポンシブ対応
 - [x] アクセシビリティ改善
 
+#### 7.4 ネオングラデーションUI（モック準拠）
+- [ ] `globals.css`に背景グラデーション（#0b1b4f→#6a18ff）を追加
+- [ ] `components/AnalysisReport.tsx`とAIパネル群をガラスモーフィズムカード化
+- [ ] ボタン配色を「ヒント=ティール」「最適解=オレンジ」で統一
+- [ ] `OfflineIndicator`のモーション（fade-in/out + 状態別カラー）をTailwindで表現
+
 ### 完了条件
 - ✅ アニメーションがスムーズ
 - ✅ 効果音が動作
@@ -322,7 +354,18 @@
   - API: Network First
 - [x] オフライン対応確認
 
-#### 8.3 PWAテスト
+#### 8.3 オフラインインジケータ
+- [ ] `hooks/useOfflineStatus.ts`を追加し、`navigator.onLine`とService Workerの`statechange`を購読
+- [ ] `components/hud/OfflineIndicator.tsx`で状態文言（「オフラインで遊べます」等）とカラーを切替
+- [ ] QA: オフライン⇔オンライン切替時のアニメーションが1秒以内で完了すること
+
+#### 8.4 クロスプラットフォームアイコン刷新
+- [ ] iOS向け180/152/120px PNGを作成し、`public/icons/ios-*`へ配置
+- [ ] Android向け192/256/512px PNGとAdaptive Iconのforeground/backgroundを作成
+- [ ] Manifestと`next-pwa`設定を更新し、新アイコンを参照
+- [ ] QA: iOS Safariの「ホーム画面に追加」とAndroid Chromeでのインストール時サムネイルをスクショ確認
+
+#### 8.5 PWAテスト
 - [x] Lighthouse監査
   - PWAスコア確認
   - パフォーマンススコア90点以上
@@ -355,6 +398,11 @@
   - 手数推移
   - 難易度別ベスト
 
+#### 9.3 プレイスタイルスパークライン（右サイドパネル）
+- [ ] `components/charts/PlayStyleChart.tsx`作成
+- [ ] HUDのAI参謀パネルに最新3ゲームの効率推移を描画
+- [ ] IndexedDBからの履歴読み込みをサマリ化し、詳細ビュー（HistoryView）へリンク
+
 ### 完了条件
 - ✅ 履歴表示が動作
 - ✅ 統計グラフが表示
@@ -366,7 +414,7 @@
 
 ### 機能面
 - [ ] 画像アップロード・AI生成・プリセットの3つの方法で選択可能
-- [ ] 4×4、5×5、6×6のパズルが正しく動作
+- [ ] 4×4〜10×10のパズルが正しく動作（UIチップ + カスタムスライダー）
 - [ ] AIヒント・最適解が正確
 - [ ] オフラインで基本機能が完全動作
 
@@ -379,6 +427,8 @@
   - 4×4: < 1秒
   - 5×5: < 5秒
   - 6×6: < 30秒
+  - 9×9: < 60秒
+  - 10×10: < 90秒
 - [ ] Lighthouse スコア 90点以上
 
 ### ユーザビリティ
@@ -419,4 +469,58 @@
 - 各Phaseは独立して実装・テスト可能
 - TDDサイクルを厳守
 - リファクタリングは必ずテストが通った状態で実施
-- 進捗は実装計画書のチェックボックスで管理
+- [ ] **Initialization & Analysis**
+    - [x] Read documentation (`doc/requirements.md`, `doc/technical-design.md`, `doc/implementation-plan.md`)
+    - [x] Verify `app/actions/image.ts` (Gemini 2.5 Flash Image)
+    - [x] Verify `components/AIImageGenerator.tsx`
+    - [x] Verify `lib/puzzle/generator.ts` (Single blank logic)
+
+## Phase 4: Core Game UI Enhancements
+#### [NEW] [StatusHUD.tsx](file:///home/ustar-wsl-2-2/projects/100apps/app037-simple-puzzle/components/hud/StatusHUD.tsx)
+- Combine Timer, MoveCounter, and Size display into a single glassmorphism card.
+
+#### [NEW] [CustomSizeSlider.tsx](file:///home/ustar-wsl-2-2/projects/100apps/app037-simple-puzzle/components/hud/CustomSizeSlider.tsx)
+- Slider for selecting puzzle size (4x4 to 10x10).
+
+#### [NEW] [ModeChips.tsx](file:///home/ustar-wsl-2-2/projects/100apps/app037-simple-puzzle/components/hud/ModeChips.tsx)
+- Chip-style selector for game modes (Free Play, Time Attack, etc.).
+
+#### [MODIFY] [GameModeSelector.tsx](file:///home/ustar-wsl-2-2/projects/100apps/app037-simple-puzzle/components/GameModeSelector.tsx)
+- Refactor to use `ModeChips`.
+
+## Phase 5: AI & Settings
+#### [NEW] [settingsStore.ts](file:///home/ustar-wsl-2-2/projects/100apps/app037-simple-puzzle/lib/store/settingsStore.ts)
+- Zustand store for AI settings (API keys, toggles, limits).
+
+#### [NEW] [AISettingsPanel.tsx](file:///home/ustar-wsl-2-2/projects/100apps/app037-simple-puzzle/components/settings/AISettingsPanel.tsx)
+- UI for entering API keys and configuring AI options.
+
+#### [MODIFY] [SettingsModal.tsx](file:///home/ustar-wsl-2-2/projects/100apps/app037-simple-puzzle/components/SettingsModal.tsx)
+- Integrate `AISettingsPanel`.
+
+## Phase 7: UI Polish
+#### [MODIFY] [globals.css](file:///home/ustar-wsl-2-2/projects/100apps/app037-simple-puzzle/app/globals.css)
+- Apply Neon Gradient theme (#0b1b4f → #6a18ff).
+
+## Phase 8: PWA & Offline
+#### [NEW] [useOfflineStatus.ts](file:///home/ustar-wsl-2-2/projects/100apps/app037-simple-puzzle/hooks/useOfflineStatus.ts)
+- Hook to track online/offline status.
+
+#### [NEW] [OfflineIndicator.tsx](file:///home/ustar-wsl-2-2/projects/100apps/app037-simple-puzzle/components/hud/OfflineIndicator.tsx)
+- Visual indicator for PWA status.
+
+## Phase 9: Analysis
+#### [NEW] [PlayStyleChart.tsx](file:///home/ustar-wsl-2-2/projects/100apps/app037-simple-puzzle/components/charts/PlayStyleChart.tsx)
+- Sparkline chart for playstyle analysis using Recharts.
+
+## Verification Plan
+
+### Automated Tests
+- **Jest**: Run `npm test` to verify logic and component rendering.
+    - Create tests for new components: `StatusHUD.test.tsx`, `CustomSizeSlider.test.tsx`, etc.
+- **Playwright**: Run `npm run test:e2e` to verify full game flow.
+
+### Manual Verification
+- **UI Check**: Verify the "Neon" look and feel.
+- **PWA Check**: Test offline mode using Chrome DevTools "Offline" mode.
+- **AI Check**: Verify Image Generation and Hint generation (requires API keys).

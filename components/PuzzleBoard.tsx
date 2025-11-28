@@ -28,7 +28,7 @@ const PuzzleBoard = ({ size, state, onMove, disabled = false, tileImages }: Puzz
   return (
     <div
       className={clsx(
-        'relative grid gap-3 rounded-3xl bg-gradient-to-br from-rose-100 to-sky-100 p-4 shadow-inner',
+        'relative mx-auto grid aspect-square w-full max-w-sm gap-1.5',
         disabled && 'opacity-70'
       )}
       style={{ gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))` }}

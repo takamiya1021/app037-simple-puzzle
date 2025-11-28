@@ -11,6 +11,7 @@ interface GameStoreState {
   puzzleState: PuzzleState
   initialState: PuzzleState
   moveCount: number
+  targetMoves: number | null // null = 制限なし
   hintsUsed: number
   isRunning: boolean
   sessionId: number
@@ -27,6 +28,7 @@ interface GameStoreActions {
   setPuzzleState: (state: PuzzleState) => void
   setInitialState: (state: PuzzleState) => void
   setMoveCount: (count: number) => void
+  setTargetMoves: (count: number | null) => void
   setHintsUsed: (count: number) => void
   setIsRunning: (isRunning: boolean) => void
   incrementSession: () => void
@@ -45,6 +47,7 @@ const createDefaultState = (): GameStoreState => ({
   puzzleState: createSolvedState(DEFAULT_SIZE),
   initialState: createSolvedState(DEFAULT_SIZE),
   moveCount: 0,
+  targetMoves: null,
   hintsUsed: 0,
   isRunning: false,
   sessionId: 1,
@@ -62,6 +65,7 @@ export const useGameStore = create<GameStore>((set) => ({
   setPuzzleState: (puzzleState) => set({ puzzleState }),
   setInitialState: (initialState) => set({ initialState }),
   setMoveCount: (moveCount) => set({ moveCount }),
+  setTargetMoves: (targetMoves) => set({ targetMoves }),
   setHintsUsed: (hintsUsed) => set({ hintsUsed }),
   setIsRunning: (isRunning) => set({ isRunning }),
   incrementSession: () => set((state) => ({ sessionId: state.sessionId + 1 })),

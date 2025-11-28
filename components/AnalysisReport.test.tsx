@@ -7,6 +7,12 @@ jest.mock('@/app/actions/ai', () => ({
   generateAnalysis: jest.fn(),
 }))
 
+jest.mock('@/lib/store/settingsStore', () => ({
+  useSettingsStore: jest.fn(() => ({
+    autoAnalysisEnabled: false,
+  })),
+}))
+
 const { generateAnalysis } = jest.requireMock('@/app/actions/ai') as { generateAnalysis: jest.Mock }
 
 describe('AnalysisReport', () => {

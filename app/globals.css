@@ -3,11 +3,57 @@
 @tailwind utilities;
 
 :root {
-  --background: 255 255 255;
-  --foreground: 31 41 55;
+  --bg-primary: #0f0f1a;
+  --bg-secondary: #1a1a2e;
+  --bg-card: #252540;
+  --accent: #00d4ff;
+  --accent-glow: rgba(0, 212, 255, 0.3);
+  --text-primary: #ffffff;
+  --text-secondary: #a0a0b0;
 }
 
 body {
-  color: rgb(var(--foreground));
-  background: rgb(var(--background));
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+/* Glass effect */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Glow button */
+.btn-glow {
+  background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+  box-shadow: 0 0 20px var(--accent-glow);
+  transition: all 0.2s ease;
+}
+
+.btn-glow:hover {
+  box-shadow: 0 0 30px var(--accent-glow), 0 0 60px var(--accent-glow);
+  transform: translateY(-1px);
+}
+
+/* Chip button */
+.chip {
+  @apply rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200;
+}
+
+.chip-active {
+  background: var(--accent);
+  color: var(--bg-primary);
+  box-shadow: 0 0 15px var(--accent-glow);
+}
+
+.chip-inactive {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+}
+
+.chip-inactive:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
 }

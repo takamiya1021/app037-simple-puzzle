@@ -1,5 +1,7 @@
 'use client'
 
+import { motion } from 'framer-motion'
+
 interface GameToastProps {
   message: string
   onClose: () => void
@@ -7,12 +9,23 @@ interface GameToastProps {
 
 const GameToast = ({ message, onClose }: GameToastProps) => {
   return (
-    <div className="fixed bottom-6 right-6 flex items-center gap-3 rounded-2xl bg-emerald-500/90 px-4 py-3 text-white shadow-lg">
-      <span>{message}</span>
-      <button type="button" onClick={onClose} className="rounded-full bg-white/30 px-2 py-0.5 text-xs">
-        閉じる
-      </button>
-    </div>
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 20, scale: 0.95 }}
+      className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2"
+    >
+      <div className="glass flex items-center gap-4 rounded-full px-6 py-3 shadow-[0_0_30px_var(--accent-glow)]">
+        <span className="text-lg font-bold text-white">{message}</span>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-full bg-white/20 px-3 py-1 text-sm text-white/80 hover:bg-white/30"
+        >
+          OK
+        </button>
+      </div>
+    </motion.div>
   )
 }
 

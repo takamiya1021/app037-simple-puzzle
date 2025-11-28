@@ -1,0 +1,27 @@
+- [x] **Initialization & Analysis**
+    - [x] Read documentation (`doc/requirements.md`, `doc/technical-design.md`, `doc/implementation-plan.md`)
+    - [x] Verify `app/actions/image.ts` (Gemini 2.5 Flash Image)
+    - [x] Verify `components/AIImageGenerator.tsx`
+    - [x] Verify `lib/puzzle/generator.ts` (Single blank logic)
+- [x] **Phase 4: Core Game UI Enhancements**
+    - [x] Implement HUD (Time, Moves, Difficulty) (`components/hud/StatusHUD.tsx`)
+    - [x] Implement Custom Size Slider (`components/hud/CustomSizeSlider.tsx`)
+    - [x] Update `components/GameModeSelector.tsx` (Mode chips)
+- [ ] **Phase 5: AI & Settings**
+    - [ ] Create `components/settings/AISettingsPanel.tsx`
+    - [ ] Update `components/SettingsModal.tsx`
+    - [ ] Update `useSettingsStore` for new AI settings
+- [ ] **Phase 7: UI Polish**
+    - [ ] Apply Neon Gradient UI theme (`globals.css`)
+    - [ ] Glassmorphism for panels
+- [ ] **Phase 8: PWA & Offline**
+    - [ ] Create `hooks/useOfflineStatus.ts`
+    - [ ] Create `components/hud/OfflineIndicator.tsx`
+    - [ ] Add Cross-platform Icons (`public/icons/`)
+    - [ ] Update `manifest.json` and `next.config.js`
+- [ ] **Phase 9: Analysis & Feedback**
+    - [ ] Create `components/charts/PlayStyleChart.tsx`
+    - [ ] Update `components/AnalysisReport.tsx`
+- [ ] **Verification**
+    - [ ] Run Jest tests
+    - [ ] Run Playwright E2E tests

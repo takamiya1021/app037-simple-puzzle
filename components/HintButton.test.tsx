@@ -7,7 +7,12 @@ jest.mock('@/app/actions/ai', () => ({
   generateHint: jest.fn(),
 }))
 
+jest.mock('@/lib/store/settingsStore', () => ({
+  useSettingsStore: jest.fn(),
+}))
+
 const { generateHint } = jest.requireMock('@/app/actions/ai') as { generateHint: jest.Mock }
+const useSettingsStore = jest.requireMock('@/lib/store/settingsStore').useSettingsStore as jest.Mock
 
 describe('HintButton', () => {
   const baseState = (() => {
@@ -18,6 +23,10 @@ describe('HintButton', () => {
 
   beforeEach(() => {
     generateHint.mockReset()
+    useSettingsStore.mockReturnValue({
+      aiAssistEnabled: true,
+      hintLimit: 3,
+    })
   })
 
   it('requests a hint and displays the result', async () => {
@@ -27,7 +36,6 @@ describe('HintButton', () => {
         size={4}
         state={baseState}
         hintsUsed={0}
-        maxHints={3}
         onHintReceived={jest.fn()}
       />
     )
@@ -41,7 +49,16 @@ describe('HintButton', () => {
   })
 
   it('disables the button when limit reached', () => {
-    render(<HintButton size={4} state={baseState} hintsUsed={3} maxHints={3} />)
+    render(<HintButton size={4} state={baseState} hintsUsed={3} />)
     expect(screen.getByRole('button', { name: 'ヒント' })).toBeDisabled()
+  })
+
+  it('hides card when AI assist disabled', () => {
+    useSettingsStore.mockReturnValue({
+      aiAssistEnabled: false,
+      hintLimit: 3,
+    })
+    render(<HintButton size={4} state={baseState} hintsUsed={0} />)
+    expect(screen.getByText('AIヒントは無効になっています')).toBeInTheDocument()
   })
 })

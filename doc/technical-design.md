@@ -16,11 +16,11 @@
 
 ### AI 統合
 - **Gemini 2.5 Flash**: ヒント生成・プレイスタイル分析
-- **Imagen 4.0**: AI画像生成
+- **Gemini 2.5 Flash Image（nano-banana）**: 画像生成
 
 **選択理由**:
 - Gemini 2.5 Flash は高速・低コスト
-- Imagen 4.0 は高品質な画像生成
+- Gemini 2.5 Flash Image は Imagen 4.0 からのアップデート版で、同一エコシステム内でテキスト/画像APIを揃えられる
 
 ### パズルアルゴリズム
 - **A*アルゴリズム**: 最適解計算
@@ -41,6 +41,10 @@
 ### 音声
 - **Web Audio API**: 効果音再生
 
+### データ可視化
+- **Recharts**: HUD内のミニスパークラインとプレイスタイル分析グラフを描画
+- **理由**: 軽量でクライアントサイドレンダリングと相性が良く、モバイルでも滑らかに表示できる
+
 ---
 
 ## アーキテクチャ設計
@@ -57,23 +61,31 @@ app/
 └── globals.css                   # グローバルスタイル
 
 components/
-├── ImageSelector.tsx             # 画像選択UI（3つの方法）
-├── ImageUploader.tsx             # 画像アップロード
-├── AIImageGenerator.tsx          # AI画像生成
-├── PresetImageSelector.tsx       # プリセット画像選択
+├── ImageSelector.tsx             # アップロード/AI/プリセットを1画面で切替
+├── AIImageGenerator.tsx          # Gemini Flash Image呼び出しUI
 ├── PuzzleBoard.tsx               # パズルボード本体
-├── Tile.tsx                      # 個別タイル（画像表示）
-├── GameControls.tsx              # ゲームコントロール
-├── GameStats.tsx                 # 統計表示（タイマー・手数）
+├── Tile.tsx                      # 個別タイル
+├── PuzzlePreview.tsx             # 完成イメージプレビュー
+├── GameModeSelector.tsx          # タイトル直下のモードチップ
+├── GameStats.tsx                 # HUDカード（経過時間/手数/サイズ）
+├── hud/
+│   ├── ModeChips.tsx             # モードチップUI（追加予定）
+│   ├── StatusHUD.tsx             # 経過時間・手数表示（追加予定）
+│   ├── CustomSizeSlider.tsx      # 4×4〜10×10スライダー（追加予定）
+│   └── OfflineIndicator.tsx      # PWA状態バッジ（追加予定）
 ├── Timer.tsx                     # タイマー
 ├── MoveCounter.tsx               # 手数カウンター
 ├── HintButton.tsx                # ヒントボタン
 ├── OptimalSolutionViewer.tsx     # 最適解表示
-├── AnalysisReport.tsx            # プレイスタイル分析
-├── GameModeSelector.tsx          # ゲームモード選択
-├── SizeSelector.tsx              # パズルサイズ選択
-├── HistoryView.tsx               # プレイ履歴
-├── SettingsModal.tsx             # 設定モーダル（APIキー）
+├── AnalysisReport.tsx            # AIプレイ分析
+├── HistoryView.tsx               # 履歴リスト
+├── charts/
+│   ├── GameHistoryChart.tsx      # 履歴画面用折れ線
+│   └── PlayStyleChart.tsx        # AI参謀パネル内スパークライン（追加予定）
+├── GameToast.tsx                 # 成功/失敗トースト
+├── SettingsModal.tsx             # AI設定モーダル（APIキー/トグル/ヒント上限）
+├── settings/
+│   └── AISettingsPanel.tsx       # 設定モーダル内のフォーム群（追加予定）
 └── ErrorBoundary.tsx             # エラーバウンダリ
 
 lib/
@@ -107,10 +119,39 @@ public/
 │   ├── animals/                  # プリセット画像（動物）
 │   ├── sea/                      # プリセット画像（海の生物）
 │   └── landscapes/               # プリセット画像（景色）
+├── icons/
+│   ├── ios-icon-180.png          # iOS 180px
+│   ├── ios-icon-152.png          # iOS 152px
+│   ├── ios-icon-120.png          # iOS 120px
+│   ├── android-chrome-256.png    # Android 256px
+│   ├── android-chrome-192.png    # Android 192px
+│   └── adaptive/
+│       ├── foreground.png        # Adaptive Icon前景
+│       └── background.png        # Adaptive Icon背景
 ├── manifest.json                 # PWA Manifest
 ├── icon-192.png                  # アプリアイコン
 └── icon-512.png                  # アプリアイコン
 ```
+
+### パズル生成ルール（single-blank保証）
+1. `createSolvedState`は常に`tiles.length === size * size - 1`の画像タイルと`EMPTY_TILE = 0`の空きマスを返す。
+2. `generatePuzzle`は`EMPTY_TILE`の位置を追跡しながら合法な隣接移動のみでシャッフルし、空きマスを複製しない。
+3. `validator.canMove`は「タイルが空きマスに隣接」かつ「空きマスが1枚存在する」ことを同時に満たす場合のみtrue。
+4. UIでは空きマスが0枚の状態を検出した時点でフェイルファスト（例外 throw）し、recoverableな再生成を行う。
+
+### UIレイアウト（nano-banana-1763530962994.png準拠）
+1. **モードチップ**: `GameModeSelector`が`ModeChips`を呼び出し、`useGameStore().mode`を元にアクティブスタイルを切替。
+2. **ステータスHUD**: `GameStats`が`StatusHUD`を内包し、`Timer`/`MoveCounter`/サイズラベルを1カードで合成。
+3. **AI参謀パネル**: `AnalysisReport`の左側に`HintButton`と`OptimalSolutionViewer`を縦積みし、`PlayStyleChart`（Recharts）でスパークラインを描画。
+4. **難易度チップ + カスタムスライダー**: `CustomSizeSlider`が`size`ストアを更新し、`PuzzleBoard`と`StatusHUD`双方へ反映。
+5. **オフラインインジケータ**: `OfflineIndicator`がService Workerの状態イベント（`navigator.serviceWorker.ready`/`navigator.onLine`）を監視し、文言・色を変化。
+
+### AI設定UI設計
+1. **エントリポイント**: `SettingsModal`をヘッダー右上のボタンから呼び出し、`useSettingsStore`で開閉状態を管理。
+2. **APIキー管理**: `AISettingsPanel`が`geminiApiKey`/`geminiImageApiKey`フィールドを表示し、貼り付け→検証→保存を一連で行う。検証は`app/actions/ai.ts`の`validateKey` Server Action経由。
+3. **AIトグル**: `aiAssistEnabled`（ヒントON/OFF）、`autoAnalysisEnabled`（クリア後自動表示）、`hintLimit`（1〜5）をZustandに保存し、`HintButton`や`AnalysisReport`が参照。
+4. **ステータス表示**: 成功時は緑の「有効」、失敗時は赤の「無効」バッジ。最後の検証日時を`lastValidatedAt`として表示。
+5. **ガードレール**: APIキーはブラウザ内でAES暗号化してIndexedDBにもバックアップし、Service Worker経由のリクエスト送信時には常に環境変数よりローカル設定を優先。
 
 ---
 
@@ -122,7 +163,7 @@ interface PuzzleGame {
   id: string;                     // UUID
   timestamp: number;              // 開始時刻（Unix time）
   mode: 'freePlay' | 'timeAttack' | 'moveChallenge'; // ゲームモード
-  size: 4 | 5 | 6;                // パズルサイズ
+  size: 4 | 5 | 6 | 7 | 8 | 9 | 10; // パズルサイズ（カスタムスライダー対応）
   imageData: string;              // 画像データ（Base64 or URL）
   imageSource: 'upload' | 'ai' | 'preset'; // 画像ソース
   moves: Move[];                  // 移動履歴
@@ -132,6 +173,8 @@ interface PuzzleGame {
   completed: boolean;             // クリア済みか
   efficiency: number;             // 効率性（最適解との比率）
   aiAdvice?: string;              // AIアドバイス
+  imageMode: 'image' | 'number' | 'outline'; // 表示モード
+  shuffleCount: number;           // 初期シャッフル回数（HUD表示用）
 }
 ```
 
@@ -156,7 +199,9 @@ interface PuzzleState {
   tiles: TileData[][];            // 2次元配列（タイルデータ）
   emptyPos: Position;             // 空きマスの位置
   moveCount: number;              // 現在の手数
-  size: 4 | 5 | 6;                // パズルサイズ
+  size: 4 | 5 | 6 | 7 | 8 | 9 | 10; // パズルサイズ
+  displayMode: 'image' | 'number' | 'outline'; // 現在の表示モード
+  shuffleCount: number;           // 現在のシャッフル回数
 }
 
 interface TileData {
@@ -178,8 +223,16 @@ interface ImageFragment {
 interface UserSettings {
   soundEnabled: boolean;          // 効果音
   animationSpeed: 'slow' | 'normal' | 'fast'; // アニメーション速度
-  geminiApiKey?: string;          // Gemini APIキー
-  imagenApiKey?: string;          // Imagen APIキー
+  geminiApiKey?: string;          // Gemini（ヒント/分析）APIキー
+  geminiImageApiKey?: string;     // Gemini 2.5 Flash Image APIキー
+  imageMode: 'image' | 'number' | 'outline'; // 盤面表示モード初期値
+  offlineBadgeDismissed?: boolean; // オフラインバッジの説明を閉じたか
+  aiAssistEnabled: boolean;       // AIヒントボタンを表示するか
+  autoAnalysisEnabled: boolean;   // クリア後に自動で分析を表示するか
+  hintLimit: 1 | 2 | 3 | 4 | 5;   // 1ゲームあたりのヒント最大回数
+  lastValidatedAt?: number;       // APIキー最終検証時刻
+  geminiKeyStatus?: 'valid' | 'invalid' | 'unknown';
+  geminiImageKeyStatus?: 'valid' | 'invalid' | 'unknown';
 }
 ```
 
@@ -421,7 +474,7 @@ export async function generateHint(
   }
 
   // APIキー取得
-  const apiKey = clientApiKey || process.env.GEMINI_API_KEY;
+  const apiKey = clientApiKey || process.env.GEMINI_IMAGE_API_KEY || process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
     // フォールバック: シンプルなメッセージ
@@ -472,7 +525,7 @@ export async function generateImage(
   prompt: string,
   clientApiKey?: string
 ): Promise<ImageResponse> {
-  const apiKey = clientApiKey || process.env.GEMINI_API_KEY;
+  const apiKey = clientApiKey || process.env.GEMINI_IMAGE_API_KEY || process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
     return {
@@ -483,11 +536,11 @@ export async function generateImage(
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'imagen-4.0-generate-001' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-image' });
 
     const result = await model.generateContent({
       prompt: prompt,
-      // Imagen specific parameters
+      // Gemini 2.5 Flash Image specific parameters（例: aspectRatio, background）
     });
 
     const imageData = result.response.images[0].data; // Base64
@@ -729,7 +782,7 @@ export function Tile({ tile, position, onClick, size }: TileProps) {
 - プレイスタイル分析
 
 ### Phase 6: AI画像生成
-- Imagen統合
+- Gemini 2.5 Flash Image（nano-banana）統合
 - 画像生成UI
 
 ### Phase 7: UI/UX磨き込み

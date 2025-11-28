@@ -1,9 +1,11 @@
 const STORAGE_KEY = 'custom-image-puzzle-api-keys'
 
-type Provider = 'gemini' | 'imagen'
+type Provider = 'gemini'
 
 interface ApiKeyPayload {
   gemini?: string
+  // Legacy keys (for backward compatibility)
+  geminiImage?: string
   imagen?: string
 }
 
@@ -18,22 +20,31 @@ export function saveApiKey(provider: Provider, key: string) {
   const storage = getStorage()
   if (!storage) return
   const payload = readPayload(storage)
-  payload[provider] = key
+  payload.gemini = key
+  
+  // クリーンアップ: 統合されたので古いキーは削除
+  delete payload.geminiImage
+  delete payload.imagen
+  
   storage.setItem(STORAGE_KEY, JSON.stringify(payload))
 }
 
-export function loadApiKey(provider: Provider): string | null {
+export function loadApiKey(_provider: Provider = 'gemini'): string | null {
   const storage = getStorage()
   if (!storage) return null
   const payload = readPayload(storage)
-  return payload[provider] ?? null
+  
+  // 優先順位: gemini > geminiImage > imagen
+  return payload.gemini ?? payload.geminiImage ?? payload.imagen ?? null
 }
 
-export function deleteApiKey(provider: Provider) {
+export function deleteApiKey(_provider: Provider) {
   const storage = getStorage()
   if (!storage) return
   const payload = readPayload(storage)
-  delete payload[provider]
+  delete payload.gemini
+  delete payload.geminiImage
+  delete payload.imagen
   storage.setItem(STORAGE_KEY, JSON.stringify(payload))
 }
 

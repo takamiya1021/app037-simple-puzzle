@@ -14,10 +14,21 @@ describe('apiKeyStorage', () => {
 
   it('deletes a specific key without affecting others', () => {
     saveApiKey('gemini', 'abc123')
-    saveApiKey('imagen', 'img456')
+    saveApiKey('geminiImage', 'img456')
     deleteApiKey('gemini')
     expect(loadApiKey('gemini')).toBeNull()
-    expect(loadApiKey('imagen')).toBe('img456')
+    expect(loadApiKey('geminiImage')).toBe('img456')
+  })
+
+  it('loads legacy imagen key for geminiImage provider', () => {
+    window.localStorage.setItem(
+      'custom-image-puzzle-api-keys',
+      JSON.stringify({ imagen: 'legacy-key' })
+    )
+    expect(loadApiKey('geminiImage')).toBe('legacy-key')
+    saveApiKey('geminiImage', 'new-key')
+    expect(loadApiKey('geminiImage')).toBe('new-key')
+    expect(JSON.parse(window.localStorage.getItem('custom-image-puzzle-api-keys') || '{}').imagen).toBeUndefined()
   })
 
   it('handles corrupted payload gracefully', () => {
