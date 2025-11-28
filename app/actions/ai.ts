@@ -2,7 +2,7 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { getNextOptimalMove, buildHintPrompt } from '@/lib/ai/hintGenerator'
-import { buildAnalysisFallback, buildAnalysisPrompt, computePlayMetrics, type PlayMetrics } from '@/lib/ai/analyzePlay'
+import { buildAnalysisFallback, buildAnalysisPrompt, buildDetailedFallback, parseAnalysisResponse, computePlayMetrics, type PlayMetrics, type DetailedAnalysis } from '@/lib/ai/analyzePlay'
 import type { PuzzleMoveSuggestion, PuzzleSize, PuzzleState } from '@/lib/puzzle/types'
 
 export interface HintResponse {
@@ -17,6 +17,7 @@ export interface AnalysisResponse {
   success: boolean
   summary?: string
   metrics?: PlayMetrics | null
+  detailedAnalysis?: DetailedAnalysis | null
   isDefaultMessage?: boolean
   error?: string
 }
@@ -130,9 +131,16 @@ export async function generateAnalysis({
 
   const apiKey = clientApiKey || process.env.GEMINI_API_KEY
   const fallbackSummary = buildAnalysisFallback(metrics, { moveCount, durationSeconds })
+  const fallbackDetailed = buildDetailedFallback(metrics, { moveCount, durationSeconds, hintsUsed })
 
   if (!apiKey) {
-    return { success: true, summary: fallbackSummary, metrics, isDefaultMessage: true }
+    return { 
+      success: true, 
+      summary: fallbackSummary, 
+      metrics, 
+      detailedAnalysis: fallbackDetailed,
+      isDefaultMessage: true 
+    }
   }
 
   const factory = modelFactory ?? defaultModelFactory
@@ -143,11 +151,18 @@ export async function generateAnalysis({
     const response = await model.generateContent(prompt)
     const text = response.response?.text()?.trim()
 
+    // JSONパースを試みる
+    const detailedAnalysis = text ? parseAnalysisResponse(text) : null
+
+    // AIからの応答があれば、それを使用（パースできなくてもtextがあればAI生成として扱う）
+    const isAiGenerated = !!text && text.length > 0
+
     return {
       success: true,
-      summary: text && text.length > 0 ? text : fallbackSummary,
+      summary: detailedAnalysis ? `${detailedAnalysis.playStyle}: ${detailedAnalysis.praise}` : (text || fallbackSummary),
       metrics,
-      isDefaultMessage: !text,
+      detailedAnalysis: detailedAnalysis || fallbackDetailed,
+      isDefaultMessage: !isAiGenerated,
     }
   } catch (error) {
     console.error('Gemini analysis error:', error)
@@ -155,6 +170,7 @@ export async function generateAnalysis({
       success: true,
       summary: fallbackSummary,
       metrics,
+      detailedAnalysis: fallbackDetailed,
       isDefaultMessage: true,
     }
   }

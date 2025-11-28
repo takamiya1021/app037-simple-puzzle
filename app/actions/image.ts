@@ -14,7 +14,7 @@ interface ImageResponse {
 }
 
 /**
- * Gemini 2.5 Flash Image (Nano Banana) を使用して画像を生成
+ * Gemini 2.0 Flash を使用して画像を生成
  * 
  * 公式ドキュメント: https://ai.google.dev/gemini-api/docs/image-generation
  */
@@ -27,9 +27,9 @@ export async function generateImage({ prompt, clientApiKey }: GenerateImageArgs)
   try {
     const genAI = new GoogleGenerativeAI(apiKey)
     
-    // Gemini 2.5 Flash Image (Nano Banana) モデルを使用
+    // Gemini 2.0 Flash (画像生成対応) モデルを使用
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash-image',
+      model: 'gemini-2.0-flash-exp',
       generationConfig: {
         // @ts-expect-error - responseModalities is valid but not in types yet
         responseModalities: ['Text', 'Image'],
