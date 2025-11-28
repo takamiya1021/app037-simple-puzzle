@@ -2,16 +2,9 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
-type ImagenModel = {
-  generateContent: (request: { prompt: string }) => Promise<{ response: { images?: Array<{ data: string }> } }>
-}
-
-type ImagenFactory = (apiKey: string) => ImagenModel
-
 interface GenerateImageArgs {
   prompt: string
   clientApiKey?: string
-  modelFactory?: ImagenFactory
 }
 
 interface ImageResponse {
@@ -20,31 +13,69 @@ interface ImageResponse {
   error?: string
 }
 
-export async function generateImage({ prompt, clientApiKey, modelFactory }: GenerateImageArgs): Promise<ImageResponse> {
+/**
+ * Gemini 2.0 Flash を使用して画像を生成
+ * 
+ * 公式ドキュメント: https://ai.google.dev/gemini-api/docs/image-generation
+ */
+export async function generateImage({ prompt, clientApiKey }: GenerateImageArgs): Promise<ImageResponse> {
   const apiKey = clientApiKey || process.env.GEMINI_API_KEY
   if (!apiKey) {
     return { success: false, error: 'APIキーが設定されていません' }
   }
 
-  const factory = modelFactory ?? defaultImagenFactory
-
   try {
-    const model = factory(apiKey)
+    const genAI = new GoogleGenerativeAI(apiKey)
+    
+    // Gemini 2.0 Flash (画像生成対応) モデルを使用
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.0-flash-exp',
+      generationConfig: {
+        // @ts-expect-error - responseModalities is valid but not in types yet
+        responseModalities: ['Text', 'Image'],
+      },
+    })
+
     // パズル用に正方形（1:1）の画像を生成するプロンプトを構築
     const squarePrompt = `Generate a square image (1:1 aspect ratio, exactly square dimensions). ${prompt}`
-    const result = await model.generateContent({ prompt: squarePrompt })
-    const base64 = result.response?.images?.[0]?.data
-    if (!base64) {
+
+    // 画像生成リクエスト
+    const result = await model.generateContent(squarePrompt)
+    const response = result.response
+    const candidates = response.candidates
+
+    if (!candidates || candidates.length === 0) {
+      return { success: false, error: '画像を生成できませんでした' }
+    }
+
+    // レスポンスのパーツから画像データを探す
+    const parts = candidates[0].content?.parts
+    if (!parts) {
       return { success: false, error: '画像データを取得できませんでした' }
     }
-    return { success: true, imageData: `data:image/png;base64,${base64}` }
-  } catch (error) {
-    console.error('Imagen error:', error)
-    return { success: false, error: '画像生成中にエラーが発生しました' }
-  }
-}
 
-function defaultImagenFactory(apiKey: string): ImagenModel {
-  const genAI = new GoogleGenerativeAI(apiKey)
-  return genAI.getGenerativeModel({ model: 'imagen-4.0-generate-001' }) as ImagenModel
+    for (const part of parts) {
+      // inlineData に画像データが含まれる
+      if (part.inlineData?.data && part.inlineData?.mimeType?.startsWith('image/')) {
+        const mimeType = part.inlineData.mimeType
+        const base64 = part.inlineData.data
+        return { 
+          success: true, 
+          imageData: `data:${mimeType};base64,${base64}` 
+        }
+      }
+    }
+
+    // 画像が見つからなかった場合、テキストレスポンスを確認
+    const textPart = parts.find(p => p.text)
+    if (textPart?.text) {
+      return { success: false, error: `画像を生成できませんでした: ${textPart.text}` }
+    }
+
+    return { success: false, error: '画像データを取得できませんでした' }
+  } catch (error) {
+    console.error('Gemini Image error:', error)
+    const message = error instanceof Error ? error.message : '画像生成中にエラーが発生しました'
+    return { success: false, error: message }
+  }
 }

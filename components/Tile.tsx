@@ -11,6 +11,7 @@ interface TileProps {
   disabled?: boolean
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const Tile = ({ tile, size: _size, onClick, disabled }: TileProps) => {
   if (tile.isEmpty) {
     return (

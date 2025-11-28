@@ -29,6 +29,7 @@ export function saveApiKey(provider: Provider, key: string) {
   storage.setItem(STORAGE_KEY, JSON.stringify(payload))
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function loadApiKey(_provider: Provider = 'gemini'): string | null {
   const storage = getStorage()
   if (!storage) return null
@@ -38,6 +39,7 @@ export function loadApiKey(_provider: Provider = 'gemini'): string | null {
   return payload.gemini ?? payload.geminiImage ?? payload.imagen ?? null
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function deleteApiKey(_provider: Provider) {
   const storage = getStorage()
   if (!storage) return
