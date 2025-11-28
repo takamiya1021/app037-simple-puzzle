@@ -26,7 +26,7 @@
 ## 📸 Screenshot
 
 <div align="center">
-  <img src="png/nano-banana-1763530962994.png" alt="Simple Puzzle Screenshot" width="800">
+  <img src="png/screenshot.png" alt="Simple Puzzle Screenshot" width="800">
   <p><em>AI画像生成 × スライドパズル × プレイ分析</em></p>
 </div>
 
