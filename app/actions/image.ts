@@ -36,8 +36,11 @@ export async function generateImage({ prompt, clientApiKey }: GenerateImageArgs)
       },
     })
 
+    // パズル用に正方形（1:1）の画像を生成するプロンプトを構築
+    const squarePrompt = `Generate a square image (1:1 aspect ratio, exactly square dimensions). ${prompt}`
+
     // 画像生成リクエスト
-    const result = await model.generateContent(prompt)
+    const result = await model.generateContent(squarePrompt)
     const response = result.response
     const candidates = response.candidates
 
